@@ -1,0 +1,103 @@
+.wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 26px;
+  flex-wrap: wrap;
+}
+
+.ringBox {
+  position: relative;
+  width: 168px;
+  height: 168px;
+  flex-shrink: 0;
+}
+
+.ringSvg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.track {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.06);
+  stroke-width: 8;
+}
+
+.fill {
+  fill: none;
+  stroke-width: 8;
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: 60px 60px;
+  transition: stroke 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+              stroke-dashoffset 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.percent {
+  font-size: 40px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  color: var(--dh-text-primary);
+  line-height: 1;
+}
+
+.phase {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--dh-text-tertiary);
+  margin-top: 5px;
+}
+
+.clock {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10.5px;
+  color: var(--dh-text-tertiary);
+  margin-top: 4px;
+}
+
+.col {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 280px;
+}
+
+.status {
+  font-size: 14px;
+  color: var(--dh-text-primary);
+  font-weight: 700;
+}
+
+.remaining {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 12px;
+  color: var(--dh-text-secondary);
+}
+
+.range {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 11px;
+  color: var(--dh-text-tertiary);
+}
+
+@media (max-width: 480px) {
+  .ringBox { width: 144px; height: 144px; }
+  .percent { font-size: 32px; }
+  .status { font-size: 13px; }
+}

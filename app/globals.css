@@ -1,0 +1,220 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+    --radius: 0.5rem;
+  }
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+  body { @apply bg-background text-foreground font-sans; }
+}
+
+/* Dashboard hub design tokens (scoped via .dash-hub container) */
+.dash-hub {
+  --dh-text-primary: #FAFAFA;
+  --dh-text-secondary: #FAFAFA;
+  --dh-text-tertiary: #FAFAFA;
+  --dh-success: #6BE3A4;
+  --dh-warning: #F2C063;
+  --dh-danger: #FF6B6B;
+  --dh-bg: #080e1a;
+
+  /* Force dark palette for nested Tailwind/shadcn components */
+  --background: 222.2 84% 4.9%;
+  --foreground: 210 40% 98%;
+  --card: 215 35% 8%;
+  --card-foreground: 210 40% 98%;
+  --popover: 222.2 84% 4.9%;
+  --popover-foreground: 210 40% 98%;
+  --primary: 210 40% 98%;
+  --primary-foreground: 222.2 47.4% 11.2%;
+  --secondary: 217.2 32.6% 17.5%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 210 40% 98%;
+  --accent: 217.2 32.6% 17.5%;
+  --accent-foreground: 210 40% 98%;
+  --border: 217.2 32.6% 17.5%;
+  --input: 217.2 32.6% 17.5%;
+  --ring: 212.7 26.8% 83.9%;
+
+  position: relative;
+  isolation: isolate;
+  background: var(--dh-bg);
+  color: var(--dh-text-primary);
+  border-radius: 24px;
+  padding: clamp(20px, 4vw, 32px);
+  overflow: hidden;
+}
+
+.dash-hub::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(60% 50% at 82% 14%, rgba(224, 118, 88, 0.16), transparent 70%),
+    radial-gradient(50% 50% at 18% 90%, rgba(180, 180, 200, 0.06), transparent 70%);
+  filter: blur(40px);
+  animation: dh-drift 36s ease-in-out infinite alternate;
+  z-index: 0;
+}
+
+.dash-hub::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.014) 1px, transparent 1px);
+  background-size: 3px 3px;
+  z-index: 0;
+  mix-blend-mode: screen;
+}
+
+.dash-hub > * {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes dh-drift {
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  100% { transform: translate3d(-2%, 1%, 0) scale(1.04); }
+}
+
+.dash-hub .dash-card {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 16px;
+  padding: 20px;
+  backdrop-filter: blur(24px) saturate(1.2);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+}
+
+.dash-hub .section-title {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--dh-text-tertiary);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.dash-hub .section-title::before {
+  content: '';
+  width: 18px;
+  height: 1px;
+  background: var(--dh-text-tertiary);
+  opacity: 0.6;
+}
+.dash-hub .section-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.08), transparent);
+}
+
+/* 2-column grid inside DashboardHub */
+.dash-main-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+@media (min-width: 1024px) {
+  .dash-main-grid {
+    grid-template-columns: 1fr 1.15fr;
+  }
+}
+
+.dash-col {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.ProseMirror {
+  outline: none;
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+.ProseMirror p { margin: 0.5rem 0; }
+.ProseMirror h1 { font-size: 1.75rem; font-weight: 700; margin: 1.25rem 0 0.5rem; }
+.ProseMirror h2 { font-size: 1.35rem; font-weight: 600; margin: 1.1rem 0 0.4rem; }
+.ProseMirror h3 { font-size: 1.1rem; font-weight: 600; margin: 1rem 0 0.3rem; }
+.ProseMirror ul, .ProseMirror ol { padding-left: 1.25rem; margin: 0.5rem 0; }
+.ProseMirror ul { list-style: disc; }
+.ProseMirror ol { list-style: decimal; }
+.ProseMirror li > p { margin: 0.15rem 0; }
+.ProseMirror blockquote {
+  border-left: 3px solid hsl(var(--border));
+  padding-left: 0.75rem;
+  color: hsl(var(--muted-foreground));
+  margin: 0.75rem 0;
+}
+.ProseMirror code {
+  background: hsl(var(--muted));
+  padding: 0.1rem 0.35rem;
+  border-radius: 0.25rem;
+  font-size: 0.85em;
+}
+.ProseMirror pre {
+  background: hsl(var(--muted));
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  margin: 0.75rem 0;
+}
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: hsl(var(--muted-foreground));
+  float: left;
+  height: 0;
+  pointer-events: none;
+}

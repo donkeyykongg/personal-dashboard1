@@ -1,0 +1,1 @@
+self.__REACT_LOADABLE_MANIFEST="{\"components/finances/statement-analyzer.tsx -> pdfjs-dist/legacy/build/pdf.mjs\":{\"id\":\"components/finances/statement-analyzer.tsx -> pdfjs-dist/legacy/build/pdf.mjs\",\"files\":[\"static/chunks/_app-pages-browser_node_modules_pdfjs-dist_legacy_build_pdf_mjs.js\"]}}"

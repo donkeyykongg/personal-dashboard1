@@ -1,0 +1,97 @@
+.card {
+  position: relative;
+  background: #0d1424;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.content {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 18px 18px 14px;
+  gap: 12px;
+}
+
+.left {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.time {
+  font-family: var(--font-mono);
+  font-size: 2.6rem;
+  font-weight: 700;
+  color: #fafafa;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.date {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: #fafafa;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.weather {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.weatherIcon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.weatherTemp {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: #fafafa;
+}
+
+.sunRow {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: #fafafa;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.right {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.goalLabel {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  color: #fafafa;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  white-space: nowrap;
+}
+
+/* Day progress bar — 2px line at bottom edge */
+.barTrack {
+  height: 2px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.barFill {
+  height: 100%;
+  background: #6be3a4;
+  border-radius: 0 1px 1px 0;
+}

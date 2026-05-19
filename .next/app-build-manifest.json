@@ -1,0 +1,56 @@
+{
+  "pages": {
+    "/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/page.js"
+    ],
+    "/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/layout.css",
+      "static/chunks/app/layout.js"
+    ],
+    "/dashboard/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/dashboard/page.css",
+      "static/chunks/app/dashboard/page.js"
+    ],
+    "/schedule/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/schedule/page.js"
+    ],
+    "/notes/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/notes/page.js"
+    ],
+    "/cash-flow/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/cash-flow/page.js"
+    ],
+    "/finances/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/finances/page.js"
+    ],
+    "/login/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/login/page.js"
+    ],
+    "/kanban/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/kanban/page.js"
+    ],
+    "/pomodoro/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/pomodoro/page.js"
+    ]
+  }
+}
