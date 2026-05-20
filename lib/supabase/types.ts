@@ -193,3 +193,9 @@ export type NwActivity = {
   kind: NwActivityKind;
   created_at: string;
 };
+
+export type NwSnapshot = {
+  id: string;
+  total_chf: number;
+  captured_at: string;
+};
