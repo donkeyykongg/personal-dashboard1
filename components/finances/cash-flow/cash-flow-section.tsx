@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import type { FinanceEntry } from "@/lib/supabase/types";
 import type { MonthlyFinancePoint } from "@/lib/finances";
 import { IncomeVsExpensesChart } from "@/components/finances/income-vs-expenses-chart";
@@ -18,16 +17,6 @@ export function CashFlowSection({
 }) {
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div />
-        <Link
-          href="/finances/import"
-          className="rounded-md border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-bold uppercase tracking-[0.10em] text-white hover:bg-white/[0.08]"
-        >
-          Import statement
-        </Link>
-      </div>
-
       <FlowSummaryCards monthly={monthly} />
 
       <IncomeVsExpensesChart data={monthly} />
