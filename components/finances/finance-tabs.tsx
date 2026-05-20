@@ -3,15 +3,9 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { FINANCE_TABS, type FinanceTabKey } from "@/lib/finances/finance-tab";
 
-const TABS = [
-  { key: "net-worth", label: "Net Worth" },
-  { key: "subscriptions", label: "Subscriptions" },
-  { key: "cash-flow", label: "Cash Flow" },
-  { key: "business", label: "Business" },
-] as const;
-
-export type FinanceTabKey = (typeof TABS)[number]["key"];
+export type { FinanceTabKey };
 
 export function FinanceTabs({ active }: { active: FinanceTabKey }) {
   const router = useRouter();
@@ -20,7 +14,7 @@ export function FinanceTabs({ active }: { active: FinanceTabKey }) {
 
   return (
     <div className="flex gap-1 overflow-x-auto rounded-2xl border border-white/5 bg-white/[0.025] p-1">
-      {TABS.map((t) => {
+      {FINANCE_TABS.map((t) => {
         const isActive = t.key === active;
         return (
           <button
@@ -44,10 +38,4 @@ export function FinanceTabs({ active }: { active: FinanceTabKey }) {
       })}
     </div>
   );
-}
-
-export function parseTab(searchParam: string | string[] | undefined): FinanceTabKey {
-  const v = Array.isArray(searchParam) ? searchParam[0] : searchParam;
-  if (v === "subscriptions" || v === "cash-flow" || v === "business") return v;
-  return "net-worth";
 }

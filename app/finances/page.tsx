@@ -1,7 +1,8 @@
 // app/finances/page.tsx
 import { createClient } from "@/lib/supabase/server";
 import { ExchangeRatesProvider } from "@/lib/exchange-rates";
-import { FinanceTabs, parseTab } from "@/components/finances/finance-tabs";
+import { FinanceTabs } from "@/components/finances/finance-tabs";
+import { parseTab } from "@/lib/finances/finance-tab";
 import { NetWorthSection } from "@/components/finances/net-worth/net-worth-section";
 import { getNetWorthData } from "@/lib/finances/net-worth";
 import type { Subscription } from "@/lib/supabase/types";
