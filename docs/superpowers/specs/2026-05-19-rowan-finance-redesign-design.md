@@ -158,23 +158,23 @@ The old `components/finances/statement-analyzer.tsx` file is deleted; its catego
 ### New columns
 
 ```sql
-ALTER TABLE accounts ADD COLUMN category text DEFAULT 'bank'
-  CHECK (category IN ('bank', 'stocks', 'crypto', 'other'));
+ALTER TABLE financial_accounts ADD COLUMN nw_category text DEFAULT 'bank'
+  CHECK (nw_category IN ('bank', 'stocks', 'crypto', 'other'));
 
 ALTER TABLE expenses ADD COLUMN is_business boolean DEFAULT false;
 ```
 
-Existing `accounts` rows get `category = 'bank'` by default; user can recategorize via the UI.
+Existing `financial_accounts` rows get `nw_category = 'bank'` by default; user can recategorize via the UI. Column is named `nw_category` (not `category`) to avoid collision with the existing `FinancialAccount.kind` field used for asset/liability/income/expense classification.
 Existing `expenses` rows get `is_business = false`; user can flag them via the edit form.
 
 ### New tables
 
 ```sql
 CREATE TABLE nw_activity (
-  id bigserial PRIMARY KEY,
-  account_id bigint REFERENCES accounts(id) ON DELETE SET NULL,
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  account_id uuid REFERENCES financial_accounts(id) ON DELETE SET NULL,
   account_name text NOT NULL,
-  category text NOT NULL,
+  nw_category text NOT NULL,
   delta_chf numeric NOT NULL,
   kind text NOT NULL CHECK (kind IN ('add', 'edit', 'delete')),
   created_at timestamptz DEFAULT now()
@@ -182,7 +182,7 @@ CREATE TABLE nw_activity (
 CREATE INDEX nw_activity_created_at_idx ON nw_activity (created_at DESC);
 
 CREATE TABLE nw_snapshots (
-  id bigserial PRIMARY KEY,
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   total_chf numeric NOT NULL,
   captured_at timestamptz DEFAULT now()
 );
@@ -193,18 +193,18 @@ A new snapshot is written whenever the NW total changes by more than 0.005 CHF. 
 
 ### Subscription additions
 
-If the `subscriptions` table doesn't already have these fields, add them:
+The existing `subscriptions` table already has `billing_cycle` (monthly/yearly/weekly) and `billing_date` (day of month, integer). The ticker and auto-deduct need a real next-renewal date plus auto-deduct wiring:
 
 ```sql
-ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS renewal_date date;
-ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS period text DEFAULT 'monthly'
-  CHECK (period IN ('monthly', 'yearly', 'weekly'));
-ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS from_account_id bigint REFERENCES accounts(id) ON DELETE SET NULL;
+ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS next_renewal date;
+ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS from_account_id uuid REFERENCES financial_accounts(id) ON DELETE SET NULL;
 ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS auto_deduct boolean DEFAULT false;
 ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS last_deducted_at timestamptz;
 ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS entered_amount numeric;
 ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS entered_currency text DEFAULT 'CHF';
 ```
+
+On migration, backfill `next_renewal` from existing `billing_date` (day of month) by picking the next occurrence of that day from today. `billing_cycle` is reused as the period; no new column needed.
 
 ## Exchange rates
 
