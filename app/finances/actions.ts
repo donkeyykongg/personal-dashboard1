@@ -4,12 +4,24 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { NwCategory, Subscription, BillingCycle } from "@/lib/supabase/types";
-import { writeActivity, maybeSnapshot, grandTotal } from "@/lib/finances/net-worth";
+import {
+  writeActivity,
+  maybeSnapshot,
+  grandTotal,
+} from "@/lib/finances/net-worth";
+
+// Net-worth impact of an amount for a given category. Debt subtracts.
+function nwDelta(category: NwCategory, amount: number): number {
+  return category === "debt" ? -amount : amount;
+}
 
 async function refreshSnapshot() {
   const supabase = createClient();
-  const { data } = await supabase.from("financial_accounts").select("amount");
-  const total = grandTotal((data ?? []) as { amount: number }[] as any);
+  const { data } = await supabase
+    .from("financial_accounts")
+    .select("amount, nw_category");
+  const rows = (data ?? []) as { amount: number; nw_category: NwCategory }[];
+  const total = grandTotal(rows as any);
   await maybeSnapshot(supabase, total);
 }
 
@@ -34,7 +46,7 @@ export async function addAccount(input: {
     account_id: data.id,
     account_name: data.name,
     nw_category: input.nw_category,
-    delta_chf: input.amount_chf,
+    delta_chf: nwDelta(input.nw_category, input.amount_chf),
     kind: "add",
   });
   await refreshSnapshot();
@@ -62,13 +74,13 @@ export async function updateAccount(input: {
   if (error) throw new Error(error.message);
 
   if (input.amount_chf !== undefined) {
-    const delta = input.amount_chf - Number(existing.amount);
-    if (Math.abs(delta) > 0.005) {
+    const rawDelta = input.amount_chf - Number(existing.amount);
+    if (Math.abs(rawDelta) > 0.005) {
       await writeActivity(supabase, {
         account_id: existing.id,
         account_name: input.name ?? existing.name,
         nw_category: existing.nw_category,
-        delta_chf: delta,
+        delta_chf: nwDelta(existing.nw_category, rawDelta),
         kind: "edit",
       });
     }
@@ -91,7 +103,7 @@ export async function deleteAccount(id: string) {
       account_id: null,
       account_name: existing.name,
       nw_category: existing.nw_category,
-      delta_chf: -(Number(existing.amount) || 0),
+      delta_chf: nwDelta(existing.nw_category, -(Number(existing.amount) || 0)),
       kind: "delete",
     });
   }
@@ -208,7 +220,7 @@ export async function processAutoDeductSubs(): Promise<{ deducted: number }> {
           account_id: acct.id,
           account_name: acct.name,
           nw_category: acct.nw_category,
-          delta_chf: -(Number(sub.amount) || 0),
+          delta_chf: nwDelta(acct.nw_category, -(Number(sub.amount) || 0)),
           kind: "edit",
         });
         deducted++;
@@ -232,9 +244,12 @@ export async function processAutoDeductSubs(): Promise<{ deducted: number }> {
   }
 
   if (deducted > 0) {
-    const { data: accts } = await supabase.from("financial_accounts").select("amount");
+    const { data: accts } = await supabase
+      .from("financial_accounts")
+      .select("amount, nw_category");
     const total = (accts ?? []).reduce(
-      (s: number, a: { amount: number }) => s + (Number(a.amount) || 0),
+      (s: number, a: { amount: number; nw_category: NwCategory }) =>
+        s + nwDelta(a.nw_category, Number(a.amount) || 0),
       0
     );
     await maybeSnapshot(supabase, total);

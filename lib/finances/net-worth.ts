@@ -39,14 +39,22 @@ export async function getNetWorthData(supabase: SupabaseClient): Promise<NetWort
   };
 }
 
-export function grandTotal(accounts: FinancialAccount[]): number {
-  return accounts.reduce((sum, a) => sum + (Number(a.amount) || 0), 0);
+// Debt accounts are stored as positive balances (what you owe) but subtract
+// from net worth — so grandTotal flips the sign when nw_category === "debt".
+export function signedAmount(account: { amount: number | string; nw_category: NwCategory }): number {
+  const v = Number(account.amount) || 0;
+  return account.nw_category === "debt" ? -v : v;
 }
 
+export function grandTotal(accounts: FinancialAccount[]): number {
+  return accounts.reduce((sum, a) => sum + signedAmount(a), 0);
+}
+
+// Signed total for a category — debt comes back negative, others positive.
 export function totalByCategory(accounts: FinancialAccount[], category: NwCategory): number {
   return accounts
     .filter((a) => a.nw_category === category)
-    .reduce((sum, a) => sum + (Number(a.amount) || 0), 0);
+    .reduce((sum, a) => sum + signedAmount(a), 0);
 }
 
 export function monthlyEquivalentCHF(sub: Subscription): number {

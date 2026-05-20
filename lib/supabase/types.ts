@@ -54,7 +54,12 @@ export type PomodoroSession = {
   started_at: string;
   ended_at: string;
   minutes: number;
+  planned_minutes: number | null;
   completed: boolean;
+  activity_label: string;
+  activity_category: string;
+  mode: "focus" | "break";
+  notes: string | null;
   created_at: string;
 };
 
@@ -159,7 +164,7 @@ export type MonthlyCashFlow = {
 
 export type FinancialAccountKind = "asset" | "liability" | "income" | "expense";
 
-export type NwCategory = "bank" | "stocks" | "crypto" | "other";
+export type NwCategory = "bank" | "stocks" | "debt" | "other";
 
 export type FinancialAccount = {
   id: string;

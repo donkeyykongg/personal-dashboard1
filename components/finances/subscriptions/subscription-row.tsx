@@ -111,7 +111,7 @@ export function SubscriptionRow({
       <div className="text-right leading-tight">
         <div className="text-xl font-bold tabular-nums text-white">{format(monthly)}</div>
         <div className="mt-0.5 text-[10px] text-[#76746E]">/ month</div>
-        {sub.entered_currency !== "CHF" && sub.entered_amount != null && (
+        {sub.entered_currency !== "CAD" && sub.entered_amount != null && (
           <div className="mt-0.5 text-[10px] text-[#76746E]">
             billed {sub.entered_currency} {sub.entered_amount.toFixed(2)} / {sub.billing_cycle}
           </div>

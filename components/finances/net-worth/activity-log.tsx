@@ -6,13 +6,13 @@ import type { NwActivity } from "@/lib/supabase/types";
 const CAT_COLOR: Record<string, string> = {
   bank: "#7DD3FC",
   stocks: "#6EE7B7",
-  crypto: "#FBBF24",
+  debt: "#FF8A8A",
   other: "#B794F4",
 };
 const CAT_LABEL: Record<string, string> = {
   bank: "Bank",
   stocks: "Stocks",
-  crypto: "Crypto",
+  debt: "Debt",
   other: "Other",
 };
 

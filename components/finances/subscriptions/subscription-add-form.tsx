@@ -10,7 +10,7 @@ export function SubscriptionAddForm({ accounts }: { accounts: FinancialAccount[]
   const { rates } = useExchangeRates();
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
-  const [currency, setCurrency] = useState<Currency>("CHF");
+  const [currency, setCurrency] = useState<Currency>("CAD");
   const [cycle, setCycle] = useState<BillingCycle>("monthly");
   const [renewal, setRenewal] = useState("");
   const [fromAccountId, setFromAccountId] = useState<string>("");
@@ -70,10 +70,9 @@ export function SubscriptionAddForm({ accounts }: { accounts: FinancialAccount[]
         onChange={(e) => setCurrency(e.target.value as Currency)}
         className="rounded-md bg-white/[0.04] px-3 py-2 text-center text-xs font-semibold text-white"
       >
-        <option value="CHF">CHF</option>
+        <option value="CAD">CAD</option>
         <option value="USD">USD</option>
         <option value="EUR">EUR</option>
-        <option value="CAD">CAD</option>
       </select>
       <select
         value={cycle}

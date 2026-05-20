@@ -8,14 +8,15 @@ import { grandTotal, totalByCategory } from "@/lib/finances/net-worth";
 const CATEGORIES: { key: NwCategory; label: string }[] = [
   { key: "bank", label: "Bank" },
   { key: "stocks", label: "Stocks" },
-  { key: "crypto", label: "Crypto" },
+  { key: "debt", label: "Debt" },
   { key: "other", label: "Other" },
 ];
 
 export function NetWorthHeader({ accounts }: { accounts: FinancialAccount[] }) {
   const { currency, setCurrency, format } = useExchangeRates();
   const total = grandTotal(accounts);
-  const breakdown = CATEGORIES.filter((c) => totalByCategory(accounts, c.key) > 0)
+  const breakdown = CATEGORIES
+    .filter((c) => Math.abs(totalByCategory(accounts, c.key)) > 0.005)
     .map((c) => `${c.label}: ${format(totalByCategory(accounts, c.key))}`)
     .join("  •  ");
 
@@ -37,10 +38,9 @@ export function NetWorthHeader({ accounts }: { accounts: FinancialAccount[] }) {
           onChange={(e) => setCurrency(e.target.value as Currency)}
           className="rounded-md border border-white/10 bg-white/[0.04] px-2 py-1 text-xs text-white"
         >
-          <option value="CHF">CHF</option>
+          <option value="CAD">CAD</option>
           <option value="USD">USD</option>
           <option value="EUR">EUR</option>
-          <option value="CAD">CAD</option>
         </select>
       </div>
     </div>

@@ -5,10 +5,12 @@ import { useExchangeRates } from "@/lib/exchange-rates";
 import type { FinancialAccount, Subscription } from "@/lib/supabase/types";
 import { monthlyEquivalentCHF } from "@/lib/finances/net-worth";
 
+// Debt has no color here because debts are not a *positive* allocation slice —
+// they're excluded from the donut entirely. They still show up in the breakdown
+// line and in the net-worth grand total.
 const CAT_COLOR: Record<string, string> = {
   bank: "#7DD3FC",
   stocks: "#6EE7B7",
-  crypto: "#FBBF24",
   other: "#B794F4",
   subs: "#FF8A8A",
 };
@@ -44,6 +46,7 @@ export function AllocationDonut({
   const slices = useMemo<Slice[]>(() => {
     const out: Slice[] = [];
     accounts.forEach((a, i) => {
+      if (a.nw_category === "debt") return; // debts don't contribute to a positive allocation pie
       const v = Number(a.amount) || 0;
       if (v > 0) {
         out.push({

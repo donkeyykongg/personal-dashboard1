@@ -11,7 +11,7 @@ import { addAccount, updateAccount, deleteAccount } from "@/app/finances/actions
 const META: Record<NwCategory, { label: string; emoji: string }> = {
   bank: { label: "Bank accounts", emoji: "🏦" },
   stocks: { label: "Stocks / Investments", emoji: "📈" },
-  crypto: { label: "Crypto", emoji: "🪙" },
+  debt: { label: "Debt", emoji: "💳" },
   other: { label: "Other assets", emoji: "💼" },
 };
 
@@ -131,7 +131,7 @@ function CategoryRow({ account }: { account: FinancialAccount }) {
       const n = parseFloat(v);
       if (!isNaN(n)) nextDisplay = n;
     }
-    if (nextDisplay < 0) nextDisplay = 0;
+    if (nextDisplay < 0) nextDisplay = 0; // amounts stored positive; debt's negative effect comes from nw_category, not from a sign
     setPending(true);
     try {
       await updateAccount({ id: account.id, amount_chf: nextDisplay / rate });

@@ -32,7 +32,7 @@ export function NetWorthSection({
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <CategoryCard category="bank" accounts={accounts} />
         <CategoryCard category="stocks" accounts={accounts} />
-        <CategoryCard category="crypto" accounts={accounts} />
+        <CategoryCard category="debt" accounts={accounts} />
         <CategoryCard category="other" accounts={accounts} />
       </div>
     </div>
