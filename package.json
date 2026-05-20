@@ -9,7 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.95.1",
+    "@anthropic-ai/sdk": "^0.95.2",
     "@azure/msal-node": "^5.1.5",
     "@microsoft/microsoft-graph-client": "^3.0.7",
     "@radix-ui/react-dialog": "^1.1.2",
