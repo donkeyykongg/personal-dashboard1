@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CalendarClock, NotebookPen, Timer, LogOut, TrendingUp } from "lucide-react";
+import { CalendarClock, KanbanSquare, Moon, NotebookPen, Timer, LogOut } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -11,6 +11,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { createClient } from "@/lib/supabase/client";
+import { useTheme } from "./theme-provider";
 
 type Props = {
   open: boolean;
@@ -19,13 +20,14 @@ type Props = {
 
 const moreLinks = [
   { href: "/schedule", label: "Schedule", icon: CalendarClock },
+  { href: "/kanban", label: "Kanban", icon: KanbanSquare },
   { href: "/reflections", label: "Reflections", icon: NotebookPen },
-  { href: "/pomodoro", label: "Pomodoro", icon: Timer },
-  { href: "/cash-flow", label: "Cash flow (legacy)", icon: TrendingUp },
+  { href: "/pomodoro", label: "Focus timer", icon: Timer },
 ];
 
 export function MoreSheet({ open, onOpenChange }: Props) {
   const router = useRouter();
+  const { theme, toggle } = useTheme();
 
   async function handleLogout() {
     const supabase = createClient();
@@ -61,6 +63,16 @@ export function MoreSheet({ open, onOpenChange }: Props) {
               </Link>
             );
           })}
+          <button
+            type="button"
+            onClick={toggle}
+            className="flex items-center gap-3 rounded-xl border border-white/5 bg-white/[0.025] p-4 text-left transition-colors hover:bg-white/[0.05]"
+          >
+            <Moon className="h-5 w-5 text-[#B8B6B0]" />
+            <span className="text-sm font-medium">
+              {theme === "dark" ? "White mode" : "Dark mode"}
+            </span>
+          </button>
           <button
             type="button"
             onClick={handleLogout}

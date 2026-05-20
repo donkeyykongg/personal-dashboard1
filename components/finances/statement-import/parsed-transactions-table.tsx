@@ -47,7 +47,9 @@ export function ParsedTransactionsTable({
         setError(data.error || `HTTP ${res.status}`);
         return;
       }
-      router.push(`/finances?tab=cash-flow&imported=${data.inserted ?? 0}`);
+      const skipped = data.skipped ?? 0;
+      const msg = skipped > 0 ? `&imported=${data.inserted ?? 0}&skipped=${skipped}` : `&imported=${data.inserted ?? 0}`;
+      router.push(`/finances?tab=cash-flow${msg}`);
       router.refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Network error");

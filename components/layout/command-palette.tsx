@@ -12,7 +12,6 @@ import {
   Search,
   StickyNote,
   Timer,
-  TrendingUp,
   Wallet,
   Inbox as InboxIcon,
 } from "lucide-react";
@@ -38,8 +37,6 @@ type Bundle = {
 const NAV = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/finances", label: "Finances", icon: Wallet },
-  { href: "/cash-flow", label: "Cash flow", icon: TrendingUp },
-  { href: "/subscriptions", label: "Subscriptions", icon: Repeat },
   { href: "/notes", label: "Notes", icon: StickyNote },
   { href: "/schedule", label: "Schedule", icon: CalendarClock },
   { href: "/kanban", label: "Kanban", icon: KanbanSquare },
@@ -201,7 +198,7 @@ export function CommandPalette() {
                       <Command.Item
                         key={s.id}
                         value={`sub ${s.name} ${s.category}`}
-                        onSelect={() => go("/subscriptions")}
+                        onSelect={() => go("/finances?tab=subscriptions")}
                         className="flex cursor-pointer items-center justify-between gap-2 rounded-md px-3 py-2 text-sm aria-selected:bg-accent"
                       >
                         <span className="flex items-center gap-2">

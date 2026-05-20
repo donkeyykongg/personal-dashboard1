@@ -6,6 +6,32 @@ type Row = ParsedTransaction & { isBusiness: boolean };
 
 export const runtime = "nodejs";
 
+function normalizeDesc(s: string): string {
+  return (s || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "")
+    .slice(0, 12);
+}
+
+function amountsMatch(a: number, b: number): boolean {
+  const big = Math.max(Math.abs(a), Math.abs(b));
+  const tolerance = big >= 100 ? 5 : 0.01;
+  return Math.abs(a - b) <= tolerance;
+}
+
+function isDuplicate(
+  row: { date: string; description: string; amount: number },
+  existing: { date: string; item: string | null; amount: number }[]
+): boolean {
+  const key = normalizeDesc(row.description);
+  return existing.some(
+    (e) =>
+      e.date === row.date &&
+      normalizeDesc(e.item ?? "") === key &&
+      amountsMatch(Number(e.amount), row.amount)
+  );
+}
+
 export async function POST(request: Request) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -24,25 +50,51 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "No rows to import" }, { status: 400 });
   }
 
-  const expenses = rows
-    .filter((r) => r.type === "expense")
-    .map((r) => ({
-      item: r.description,
-      category: r.category,
-      amount: r.amount,
-      date: r.date,
-      is_business: r.isBusiness,
-      notes: null,
-    }));
-  const incomes = rows
-    .filter((r) => r.type === "income")
-    .map((r) => ({
-      item: r.description,
-      category: r.category,
-      amount: r.amount,
-      date: r.date,
-      notes: null,
-    }));
+  const dates = rows.map((r) => r.date).filter(Boolean).sort();
+  const minDate = dates[0];
+  const maxDate = dates[dates.length - 1];
+
+  const [existingExpRes, existingIncRes] = await Promise.all([
+    supabase.from("expenses").select("date,item,amount").gte("date", minDate).lte("date", maxDate),
+    supabase.from("income").select("date,item,amount").gte("date", minDate).lte("date", maxDate),
+  ]);
+  const existingExp = (existingExpRes.data ?? []) as { date: string; item: string | null; amount: number }[];
+  const existingInc = (existingIncRes.data ?? []) as { date: string; item: string | null; amount: number }[];
+
+  let skipped = 0;
+  const expenses: any[] = [];
+  const incomes: any[] = [];
+
+  for (const r of rows) {
+    if (r.type === "expense") {
+      if (isDuplicate({ date: r.date, description: r.description, amount: r.amount }, existingExp)) {
+        skipped++;
+        continue;
+      }
+      expenses.push({
+        item: r.description,
+        category: r.category,
+        amount: r.amount,
+        date: r.date,
+        is_business: r.isBusiness,
+        notes: null,
+      });
+      existingExp.push({ date: r.date, item: r.description, amount: r.amount });
+    } else {
+      if (isDuplicate({ date: r.date, description: r.description, amount: r.amount }, existingInc)) {
+        skipped++;
+        continue;
+      }
+      incomes.push({
+        item: r.description,
+        category: r.category,
+        amount: r.amount,
+        date: r.date,
+        notes: null,
+      });
+      existingInc.push({ date: r.date, item: r.description, amount: r.amount });
+    }
+  }
 
   let inserted = 0;
   if (expenses.length) {
@@ -60,5 +112,5 @@ export async function POST(request: Request) {
     inserted += count ?? incomes.length;
   }
 
-  return NextResponse.json({ inserted });
+  return NextResponse.json({ inserted, skipped });
 }

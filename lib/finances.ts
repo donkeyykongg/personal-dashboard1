@@ -76,8 +76,32 @@ export async function getFinanceOverview(supabase: SupabaseClient) {
     if (bucket) bucket.expenses += Number(entry.amount) || 0;
   });
 
-  const currentMonth = monthKey(new Date());
+  const now = new Date();
+  const currentMonth = monthKey(now);
+  const prevDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const prevMonth = monthKey(prevDate);
   const monthly = Array.from(buckets.values());
+
+  const sumBy = (entries: FinanceEntry[], month: string) => {
+    const out = new Map<string, number>();
+    for (const e of entries) {
+      if (!e.date.startsWith(month)) continue;
+      if (e.is_business) continue;
+      const k = e.category || "Other";
+      out.set(k, (out.get(k) ?? 0) + (Number(e.amount) || 0));
+    }
+    return out;
+  };
+  const currExpensesByCat = sumBy(expenses, currentMonth);
+  const prevExpensesByCat = sumBy(expenses, prevMonth);
+  const cats = new Set<string>([...currExpensesByCat.keys(), ...prevExpensesByCat.keys()]);
+  const expenseCategoryDeltas = Array.from(cats)
+    .map((cat) => {
+      const curr = currExpensesByCat.get(cat) ?? 0;
+      const prev = prevExpensesByCat.get(cat) ?? 0;
+      return { category: cat, curr, prev, abs: curr - prev };
+    })
+    .sort((a, b) => Math.abs(b.abs) - Math.abs(a.abs));
   const recurringExpenses = expenses
     .filter((entry) => entry.is_recurring)
     .map((entry) => ({
@@ -113,6 +137,7 @@ export async function getFinanceOverview(supabase: SupabaseClient) {
       .reduce((sum, entry) => sum + (Number(entry.amount) || 0), 0),
     recentIncome: income.slice(0, 6),
     recentExpenses: expenses.slice(0, 6),
+    expenseCategoryDeltas,
     recurringExpenses,
     recurringIncome,
     accounts,

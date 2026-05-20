@@ -18,7 +18,7 @@ export const dynamic = "force-dynamic";
 export default async function FinancesPage({
   searchParams,
 }: {
-  searchParams: { tab?: string };
+  searchParams: { tab?: string; imported?: string; skipped?: string };
 }) {
   // Fire-and-process auto-deduct before reading subscription/account state.
   await processAutoDeductSubs();
@@ -35,6 +35,10 @@ export default async function FinancesPage({
   const subscriptions = (subsRes.data ?? []) as Subscription[];
   const businessEntries = (businessRes.data ?? []) as FinanceEntry[];
 
+  const importedCount = Number(searchParams.imported ?? 0);
+  const skippedCount = Number(searchParams.skipped ?? 0);
+  const showImportBanner = active === "cash-flow" && (importedCount > 0 || skippedCount > 0);
+
   return (
     <ExchangeRatesProvider>
       <div className="dash-hub space-y-6">
@@ -44,6 +48,13 @@ export default async function FinancesPage({
             Net worth, subscriptions, cash flow, and business expenses.
           </p>
         </header>
+
+        {showImportBanner && (
+          <div className="rounded-md border border-[#6EE7B7]/30 bg-[#6EE7B7]/10 px-3 py-2 text-sm text-[#6EE7B7]">
+            Imported {importedCount} transaction{importedCount === 1 ? "" : "s"}
+            {skippedCount > 0 ? ` · skipped ${skippedCount} duplicate${skippedCount === 1 ? "" : "s"}` : ""}.
+          </div>
+        )}
 
         <RenewalTicker subscriptions={subscriptions} />
 
@@ -65,6 +76,7 @@ export default async function FinancesPage({
             monthly={overview.monthly}
             recentIncome={overview.recentIncome}
             recentExpenses={overview.recentExpenses.filter((e: FinanceEntry) => !e.is_business)}
+            categoryDeltas={overview.expenseCategoryDeltas}
           />
         )}
         {active === "business" && <BusinessExpensesSection entries={businessEntries} />}
