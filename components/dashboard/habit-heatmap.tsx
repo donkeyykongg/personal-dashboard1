@@ -62,10 +62,10 @@ export function HabitHeatmap({ sessions, reflections, weeks = 16 }: Props) {
     <section className="space-y-3 rounded-lg border bg-card p-5 shadow-sm">
       <div className="flex items-end justify-between">
         <div>
-          <p className="text-sm font-medium text-muted-foreground">Habits</p>
-          <h2 className="text-xl">Activity heatmap</h2>
+          <p className="text-sm font-medium text-[#B8B6B0]">Habits</p>
+          <h2 className="text-xl text-white">Activity heatmap</h2>
         </div>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-[#B8B6B0]">
           {totalCount} entries · {totalActive} active days
         </p>
       </div>
@@ -92,7 +92,7 @@ export function HabitHeatmap({ sessions, reflections, weeks = 16 }: Props) {
         </div>
       </div>
 
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+      <div className="flex items-center gap-2 text-xs text-[#B8B6B0]">
         <span>less</span>
         {[0, 1, 2, 4, 5].map((c) => (
           <span key={c} className={`h-3 w-3 rounded-sm ${level(c)}`} />

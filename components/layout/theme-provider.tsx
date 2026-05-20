@@ -17,10 +17,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     if (stored === "dark" || stored === "light") {
       setTheme(stored);
       document.documentElement.classList.toggle("dark", stored === "dark");
+      document.documentElement.classList.toggle("light", stored === "light");
     } else {
       const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
       setTheme(dark ? "dark" : "light");
       document.documentElement.classList.toggle("dark", dark);
+      document.documentElement.classList.toggle("light", !dark);
     }
   }, []);
 
@@ -28,6 +30,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     setTheme((prev) => {
       const next: Theme = prev === "dark" ? "light" : "dark";
       document.documentElement.classList.toggle("dark", next === "dark");
+      document.documentElement.classList.toggle("light", next === "light");
       try {
         localStorage.setItem("theme", next);
       } catch {}

@@ -1,0 +1,343 @@
+.focusShell {
+  --focus-font: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --focus-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color: #fafafa;
+  font-family: var(--focus-font);
+}
+
+.panel {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 12px 40px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(24px) saturate(1.2);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+}
+
+.panel::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 14px;
+  right: 14px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.16), transparent);
+  pointer-events: none;
+}
+
+.eyebrow {
+  font-family: var(--focus-mono);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #76746E;
+}
+
+.timerCard {
+  position: relative;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.timerContent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 26px 28px 22px;
+}
+
+.timerText {
+  font-family: var(--focus-mono);
+  font-size: clamp(52px, 8vw, 84px);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: #ffffff;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.timerMeta {
+  font-family: var(--focus-mono);
+  font-size: 10px;
+  font-weight: 800;
+  color: #76746E;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin-top: 8px;
+}
+
+.timerSub {
+  font-family: var(--focus-font);
+  font-size: 12px;
+  color: #76746E;
+  margin-top: 14px;
+}
+
+.timerRingBox {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  flex: 0 0 auto;
+}
+
+.timerRingBox svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.timerRingOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.timerRingPct {
+  font-family: var(--focus-mono);
+  font-size: 24px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.timerRingLabel {
+  font-family: var(--focus-mono);
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #76746E;
+  margin-top: 6px;
+}
+
+.timerBarTrack {
+  height: 2px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.timerBarFill {
+  height: 100%;
+  background: var(--rowan-accent, #6be3a4);
+  border-radius: 0 1px 1px 0;
+  box-shadow: 0 0 8px rgba(107, 227, 164, 0.45);
+}
+
+.darkInput,
+.darkSelect {
+  width: 100%;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(5, 5, 6, 0.44);
+  color: #fafafa;
+  padding: 0 12px;
+  font-size: 14px;
+  outline: none;
+}
+
+.darkInput:focus,
+.darkSelect:focus {
+  border-color: rgba(107, 227, 164, 0.62);
+  box-shadow: 0 0 0 3px rgba(107, 227, 164, 0.12);
+}
+
+.primaryButton,
+.ghostButton,
+.modeButton,
+.taskButton {
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.primaryButton {
+  background: var(--rowan-accent, #6be3a4);
+  color: #06100b;
+  font-weight: 800;
+  box-shadow: 0 0 22px rgba(107, 227, 164, 0.22);
+}
+
+.ghostButton,
+.modeButton,
+.taskButton {
+  background: rgba(255, 255, 255, 0.04);
+  color: #fafafa;
+}
+
+.primaryButton:hover,
+.ghostButton:hover,
+.modeButton:hover,
+.taskButton:hover {
+  transform: translateY(-1px);
+  border-color: rgba(107, 227, 164, 0.34);
+}
+
+.modeActive {
+  background: rgba(107, 227, 164, 0.12);
+  border-color: rgba(107, 227, 164, 0.48);
+  color: #8ee9b7;
+}
+
+.taskButton {
+  text-align: left;
+}
+
+.statValue {
+  font-family: var(--focus-mono);
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--rowan-accent, #6be3a4);
+}
+
+.heatmapBoard {
+  width: 100%;
+  max-width: 430px;
+}
+
+.heatWeekHeader,
+.heatWeekRow {
+  display: grid;
+  grid-template-columns: 54px repeat(7, 36px) 54px;
+  align-items: center;
+  gap: 7px;
+}
+
+.heatWeekHeader {
+  margin-bottom: 10px;
+  font-family: var(--focus-mono);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-align: center;
+  text-transform: uppercase;
+  color: #b8b6b0;
+}
+
+.heatWeekStack {
+  display: grid;
+  gap: 7px;
+}
+
+.heatDateLabel {
+  font-family: var(--focus-mono);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #b8b6b0;
+  white-space: nowrap;
+}
+
+.heatWeekRow .heatDateLabel:last-child {
+  text-align: right;
+}
+
+.heatCell {
+  height: 36px;
+  width: 36px;
+  min-width: 36px;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.heatLegend .heatCell {
+  height: 22px;
+  width: 22px;
+  min-width: 22px;
+  border-radius: 6px;
+}
+
+.todayCell {
+  outline: 2px solid #fafafa;
+  outline-offset: 2px;
+  box-shadow:
+    0 0 0 1px rgba(107, 227, 164, 0.7),
+    0 0 12px rgba(107, 227, 164, 0.48);
+}
+
+.outsideMonthCell {
+  opacity: 0.26;
+}
+
+.level0 { background: rgba(255, 255, 255, 0.055); }
+.level1 { background: rgba(107, 227, 164, 0.20); }
+.level2 { background: rgba(107, 227, 164, 0.38); }
+.level3 { background: rgba(107, 227, 164, 0.62); }
+.level4 {
+  background: var(--rowan-accent, #6be3a4);
+  box-shadow: 0 0 10px rgba(107, 227, 164, 0.34);
+}
+
+.allocationRingBox {
+  position: relative;
+  width: min(260px, 72vw);
+  height: min(260px, 72vw);
+  margin: 0 auto;
+}
+
+.allocationCenter {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.allocationPct {
+  font-family: var(--focus-mono);
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: #fafafa;
+}
+
+.allocationLabel {
+  font-family: var(--focus-mono);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #b8b6b0;
+  margin-top: 5px;
+}
+
+@media (max-width: 640px) {
+  .timerContent {
+    padding: 22px 20px 18px;
+  }
+
+  .timerRingBox {
+    width: 112px;
+    height: 112px;
+  }
+
+  .timerText {
+    font-size: 46px;
+  }
+
+  .heatWeekHeader,
+  .heatWeekRow {
+    grid-template-columns: 44px repeat(7, 28px) 44px;
+    gap: 6px;
+  }
+
+  .heatCell {
+    height: 28px;
+    width: 28px;
+    min-width: 28px;
+  }
+}

@@ -137,7 +137,7 @@ export function MacroTimeGrid() {
                 style={{
                   height: "100%",
                   width: `${Math.min(100, pct).toFixed(2)}%`,
-                  background: "#6be3a4",
+                  background: "var(--rowan-accent, #6be3a4)",
                   borderRadius: 1,
                   transition: "width 1s ease",
                 }}

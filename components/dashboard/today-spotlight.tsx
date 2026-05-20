@@ -21,23 +21,23 @@ export function TodaySpotlight({
   pomodoroTargetMinutes,
 }: Props) {
   return (
-    <section className="rounded-2xl border-2 border-primary/20 bg-gradient-to-br from-card to-primary/5 p-6 shadow-md">
+    <section className="rowan-panel p-6">
       <div className="mb-4 flex items-center justify-between">
         <div>
-          <p className="text-xs font-medium uppercase tracking-widest text-primary">
+          <p className="rowan-eyebrow">
             Spotlight
           </p>
-          <h2 className="text-3xl">Today</h2>
+          <h2 className="mt-1 text-3xl font-semibold text-white">Today</h2>
         </div>
-        <Calendar className="h-6 w-6 text-muted-foreground" />
+        <Calendar className="h-6 w-6 text-[#B8B6B0]" />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
         {/* Quick wins */}
-        <div className="rounded-xl border bg-background p-4">
+        <div className="rounded-xl border border-white/5 bg-white/[0.025] p-4">
           <div className="mb-3 flex items-center justify-between">
             <p className="flex items-center gap-2 text-sm font-medium">
-              <Zap className="h-4 w-4 text-yellow-600" />
+              <Zap className="h-4 w-4 text-[#F2C063]" />
               Quick wins
             </p>
             <Link
@@ -48,7 +48,7 @@ export function TodaySpotlight({
             </Link>
           </div>
           {quickWins.length === 0 ? (
-            <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-[#B8B6B0]">
               No high-priority / low-effort cards yet. Tag cards on the kanban to
               promote them here.
             </p>
@@ -57,7 +57,7 @@ export function TodaySpotlight({
               {quickWins.slice(0, 3).map((c) => (
                 <li
                   key={c.id}
-                  className="rounded-md border bg-card p-2 text-sm"
+                  className="rounded-md bg-white/[0.035] p-2 text-sm text-white"
                 >
                   {c.title}
                 </li>
@@ -67,10 +67,10 @@ export function TodaySpotlight({
         </div>
 
         {/* Today's events */}
-        <div className="rounded-xl border bg-background p-4">
+        <div className="rounded-xl border border-white/5 bg-white/[0.025] p-4">
           <div className="mb-3 flex items-center justify-between">
             <p className="flex items-center gap-2 text-sm font-medium">
-              <Calendar className="h-4 w-4 text-sky-600" />
+              <Calendar className="h-4 w-4 text-[#7DD3FC]" />
               On the calendar
             </p>
             <Link
@@ -81,7 +81,7 @@ export function TodaySpotlight({
             </Link>
           </div>
           {todayEvents.length === 0 ? (
-            <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-[#B8B6B0]">
               Nothing scheduled today.
             </p>
           ) : (
@@ -89,10 +89,10 @@ export function TodaySpotlight({
               {todayEvents.slice(0, 4).map((ev) => (
                 <li
                   key={ev.id}
-                  className="rounded-md border bg-card p-2 text-sm"
+                  className="rounded-md bg-white/[0.035] p-2 text-sm text-white"
                 >
                   <p className="font-medium">{ev.title}</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-[#B8B6B0]">
                     {fmtTime(ev.start_at)} – {fmtTime(ev.end_at)}
                     {ev.location ? ` · ${ev.location}` : ""}
                   </p>
@@ -103,10 +103,10 @@ export function TodaySpotlight({
         </div>
 
         {/* Focus target */}
-        <div className="rounded-xl border bg-background p-4">
+        <div className="rounded-xl border border-white/5 bg-white/[0.025] p-4">
           <div className="mb-3 flex items-center justify-between">
             <p className="flex items-center gap-2 text-sm font-medium">
-              <Target className="h-4 w-4 text-emerald-600" />
+              <Target className="h-4 w-4 text-[var(--rowan-accent)]" />
               Focus target
             </p>
             <Link
@@ -116,14 +116,14 @@ export function TodaySpotlight({
               Pomodoro <ArrowUpRight className="h-3 w-3" />
             </Link>
           </div>
-          <div className="rounded-md border bg-card p-3">
-            <p className="font-mono text-3xl">{pomodoroTargetMinutes}m</p>
-            <p className="mt-1 text-xs text-muted-foreground">
+          <div className="rounded-md border border-white/5 bg-white/[0.035] p-3">
+            <p className="font-mono text-3xl text-white">{pomodoroTargetMinutes}m</p>
+            <p className="mt-1 text-xs text-[#B8B6B0]">
               Default sprint length
             </p>
             <Link
               href="/pomodoro"
-              className="mt-3 flex items-center justify-center gap-2 rounded-md bg-primary px-3 py-2 text-xs font-medium text-primary-foreground hover:bg-primary/90"
+              className="rowan-primary mt-3 flex items-center justify-center gap-2 rounded-md px-3 py-2 text-xs font-bold"
             >
               <Timer className="h-3 w-3" />
               Start a sprint

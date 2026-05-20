@@ -61,8 +61,8 @@ export function TimeProgress() {
     <section className="rounded-lg border bg-card p-6 shadow-sm">
       <div className="mb-5 flex flex-wrap items-end justify-between gap-2">
         <div>
-          <p className="text-sm font-medium text-muted-foreground">Today</p>
-          <h2 className="text-3xl font-medium">
+          <p className="text-sm font-medium text-[#B8B6B0]">Today</p>
+          <h2 className="text-3xl font-medium text-white">
             {now.toLocaleDateString("en-US", {
               weekday: "long",
               month: "long",
@@ -71,7 +71,7 @@ export function TimeProgress() {
             })}
           </h2>
         </div>
-        <p className="text-3xl font-mono tabular-nums">
+        <p className="text-3xl font-mono tabular-nums text-white">
           {now.toLocaleTimeString("en-US", {
             hour: "numeric",
             minute: "2-digit",
@@ -89,8 +89,8 @@ export function TimeProgress() {
               />
             </div>
             <div className="w-32 shrink-0 text-sm">
-              <span className="font-medium">{r.label}: {r.pct.toFixed(0)}%</span>
-              <span className="block text-xs text-muted-foreground">{r.detail}</span>
+              <span className="font-medium text-white">{r.label}: {r.pct.toFixed(0)}%</span>
+              <span className="block text-xs text-[#B8B6B0]">{r.detail}</span>
             </div>
           </li>
         ))}

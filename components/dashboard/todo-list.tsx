@@ -373,7 +373,7 @@ function GoalCard({ storageKey, date, variant }: CardProps) {
   const [flashIndex, setFlashIndex] = useState<number | null>(null);
   const [streak, setStreak] = useState<StreakState>({ count: 0, lastProcessedDate: "" });
   const [statusMsg, setStatusMsg] = useState<{ text: string; error?: boolean }>({ text: "" });
-  const inputRef = useRef<HTMLInputElement | null>(null);
+  const inputRef = useRef<HTMLTextAreaElement | null>(null);
 
   // Streak read for TODAY card
   useEffect(() => {
@@ -486,8 +486,8 @@ function GoalCard({ storageKey, date, variant }: CardProps) {
     }
   };
 
-  const onInputKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
+  const onInputKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
       e.preventDefault();
       handleAdd();
     }
@@ -587,7 +587,7 @@ function GoalCard({ storageKey, date, variant }: CardProps) {
       )}
 
       <div className={styles.inputWrap}>
-        <input
+        <textarea
           ref={inputRef}
           className={styles.input}
           placeholder={
@@ -632,16 +632,18 @@ export function TodoList() {
   return (
     <div className={styles.section}>
       <div className="section-title">To Do List</div>
-      <GoalCard
-        storageKey={`goals:${activeDate}`}
-        date={activeDate}
-        variant="today"
-      />
-      <GoalCard
-        storageKey={`goals:${tomorrowDate}`}
-        date={tomorrowDate}
-        variant="tomorrow"
-      />
+      <div className={styles.cardsGrid}>
+        <GoalCard
+          storageKey={`goals:${activeDate}`}
+          date={activeDate}
+          variant="today"
+        />
+        <GoalCard
+          storageKey={`goals:${tomorrowDate}`}
+          date={tomorrowDate}
+          variant="tomorrow"
+        />
+      </div>
     </div>
   );
 }

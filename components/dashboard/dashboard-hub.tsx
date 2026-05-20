@@ -14,18 +14,13 @@ export function DashboardHub({ rightContent }: { rightContent?: ReactNode }) {
       </div>
 
       <div className="dash-main-grid">
-        {/* Left column: command center + to-do */}
-        <div className="dash-col">
-          <CommandCenter />
-          <TodoList />
-        </div>
-
-        {/* Right column: macro time + server-data widgets */}
-        <div className="dash-col">
-          <MacroTimeGrid />
-          {rightContent}
-        </div>
+        <CommandCenter />
+        <MacroTimeGrid />
       </div>
+
+      <TodoList />
+
+      {rightContent}
     </div>
   );
 }

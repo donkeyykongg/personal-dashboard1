@@ -1,11 +1,68 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Pause, Play, RotateCcw, Volume2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
+import type { DailyTask } from "@/lib/supabase/types";
+import styles from "./focus-page.module.css";
 
-const PRESETS = [15, 25, 45, 60];
+const ACTIVITY_CATEGORIES = [
+  "School",
+  "Studying",
+  "Club work",
+  "Work",
+  "Admin",
+  "Personal",
+  "Break",
+  "Other",
+];
+
+type LocalGoal = {
+  text: string;
+  done?: boolean;
+};
+
+type WorkItem = {
+  id: string;
+  label: string;
+  dayLabel: string;
+  source: string;
+  category?: string;
+};
+
+function pad(n: number) {
+  return String(n).padStart(2, "0");
+}
+
+function dateKey(d: Date) {
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+function dateForOffset(offset: number) {
+  const d = new Date();
+  if (d.getHours() < 6) d.setDate(d.getDate() - 1);
+  d.setDate(d.getDate() + offset);
+  return dateKey(d);
+}
+
+function readGoals(key: string): LocalGoal[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as LocalGoal[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function taskDayLabel(offset: number) {
+  if (offset === 0) return "Today";
+  if (offset === 1) return "Tomorrow";
+  const d = new Date();
+  d.setDate(d.getDate() + offset);
+  return d.toLocaleDateString("en-US", { weekday: "short" });
+}
 
 function format(secs: number) {
   const m = Math.floor(secs / 60);
@@ -18,30 +75,53 @@ function ringBell() {
   const Ctx = window.AudioContext || (window as any).webkitAudioContext;
   if (!Ctx) return;
   const ctx = new Ctx();
-  const ring = (offset: number) => {
+  const ring = (offset: number, frequency: number) => {
     const osc = ctx.createOscillator();
+    const shimmer = ctx.createOscillator();
     const gain = ctx.createGain();
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(880, ctx.currentTime + offset);
-    osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + offset + 1.4);
+    osc.type = "triangle";
+    shimmer.type = "sine";
+    osc.frequency.setValueAtTime(frequency, ctx.currentTime + offset);
+    shimmer.frequency.setValueAtTime(frequency * 2, ctx.currentTime + offset);
     gain.gain.setValueAtTime(0.001, ctx.currentTime + offset);
-    gain.gain.exponentialRampToValueAtTime(0.4, ctx.currentTime + offset + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + offset + 1.4);
-    osc.connect(gain).connect(ctx.destination);
+    gain.gain.exponentialRampToValueAtTime(0.18, ctx.currentTime + offset + 0.012);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + offset + 0.72);
+    osc.connect(gain);
+    shimmer.connect(gain);
+    gain.connect(ctx.destination);
     osc.start(ctx.currentTime + offset);
-    osc.stop(ctx.currentTime + offset + 1.5);
+    shimmer.start(ctx.currentTime + offset);
+    osc.stop(ctx.currentTime + offset + 0.78);
+    shimmer.stop(ctx.currentTime + offset + 0.78);
   };
-  ring(0);
-  ring(0.55);
-  ring(1.1);
-  setTimeout(() => ctx.close(), 3000);
+  ring(0, 659.25);
+  ring(0.18, 783.99);
+  ring(0.36, 1046.5);
+  setTimeout(() => ctx.close(), 1600);
 }
 
-export function PomodoroTimer({ initialMinutes }: { initialMinutes: number }) {
+export function PomodoroTimer({
+  initialMinutes,
+  tasks,
+}: {
+  initialMinutes: number;
+  tasks: DailyTask[];
+}) {
+  const router = useRouter();
+  const [focusMinutes, setFocusMinutes] = useState(initialMinutes);
+  const [breakMinutes, setBreakMinutes] = useState(5);
+  const [focusInput, setFocusInput] = useState(String(initialMinutes));
+  const [breakInput, setBreakInput] = useState("5");
   const [minutes, setMinutes] = useState(initialMinutes);
   const [secondsLeft, setSecondsLeft] = useState(initialMinutes * 60);
   const [isRunning, setIsRunning] = useState(false);
-  const [customInput, setCustomInput] = useState(String(initialMinutes));
+  const [mode, setMode] = useState<"focus" | "break">("focus");
+  const [activityCategory, setActivityCategory] = useState("Studying");
+  const [customCategory, setCustomCategory] = useState("");
+  const [activityLabel, setActivityLabel] = useState("Focused work");
+  const [selectedWorkId, setSelectedWorkId] = useState("");
+  const [localGoals, setLocalGoals] = useState<Record<number, LocalGoal[]>>({});
+  const [status, setStatus] = useState<string | null>(null);
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startedAtRef = useRef<Date | null>(null);
   const totalSeconds = minutes * 60;
@@ -49,6 +129,25 @@ export function PomodoroTimer({ initialMinutes }: { initialMinutes: number }) {
     () => (totalSeconds === 0 ? 0 : 1 - secondsLeft / totalSeconds),
     [secondsLeft, totalSeconds]
   );
+
+  useEffect(() => {
+    const refreshGoals = () => {
+      const nextGoals: Record<number, LocalGoal[]> = {};
+      for (let offset = 0; offset < 7; offset += 1) {
+        nextGoals[offset] = readGoals(`goals:${dateForOffset(offset)}`).filter(
+          (goal) => !goal.done && goal.text.trim()
+        );
+      }
+      setLocalGoals(nextGoals);
+    };
+    refreshGoals();
+    window.addEventListener("goals-changed", refreshGoals as EventListener);
+    window.addEventListener("storage", refreshGoals);
+    return () => {
+      window.removeEventListener("goals-changed", refreshGoals as EventListener);
+      window.removeEventListener("storage", refreshGoals);
+    };
+  }, []);
 
   useEffect(() => {
     if (!isRunning) return;
@@ -70,12 +169,19 @@ export function PomodoroTimer({ initialMinutes }: { initialMinutes: number }) {
     };
   }, [isRunning]);
 
-  function applyMinutes(m: number) {
+  function applyMinutes(m: number, nextMode = mode) {
     const clamped = Math.max(1, Math.min(180, Math.round(m)));
     setMinutes(clamped);
     setSecondsLeft(clamped * 60);
     setIsRunning(false);
-    setCustomInput(String(clamped));
+    setMode(nextMode);
+    if (nextMode === "break" && activityCategory !== "Break") {
+      setActivityCategory("Break");
+      setActivityLabel("Break");
+    } else if (nextMode === "focus" && activityCategory === "Break") {
+      setActivityCategory("Studying");
+      setActivityLabel("Focused work");
+    }
     void persistMinutes(clamped);
   }
 
@@ -98,12 +204,27 @@ export function PomodoroTimer({ initialMinutes }: { initialMinutes: number }) {
   async function logSession(startedAt: Date | null, mins: number, completed: boolean) {
     if (!startedAt) return;
     const supabase = createClient();
-    await supabase.from("pomodoro_sessions").insert({
+    const elapsedMinutes = Math.max(
+      1,
+      Math.round((Date.now() - startedAt.getTime()) / 60000)
+    );
+    const { error } = await supabase.from("pomodoro_sessions").insert({
       started_at: startedAt.toISOString(),
       ended_at: new Date().toISOString(),
-      minutes: mins,
+      minutes: completed ? mins : Math.min(mins, elapsedMinutes),
+      planned_minutes: mins,
       completed,
+      activity_label: activityLabel.trim() || activityCategory,
+      activity_category: customCategory.trim() || activityCategory,
+      mode,
+      notes: null,
     });
+    if (error) {
+      setStatus(error.message);
+      return;
+    }
+    setStatus(completed ? "Session logged." : "Partial session logged.");
+    router.refresh();
   }
 
   function reset() {
@@ -111,45 +232,149 @@ export function PomodoroTimer({ initialMinutes }: { initialMinutes: number }) {
     setSecondsLeft(minutes * 60);
   }
 
-  const radius = 120;
-  const circ = 2 * Math.PI * radius;
+  function switchMode(nextMode: "focus" | "break") {
+    setMode(nextMode);
+    const nextMinutes = nextMode === "focus" ? focusMinutes : breakMinutes;
+    setMinutes(nextMinutes);
+    setSecondsLeft(nextMinutes * 60);
+    setIsRunning(false);
+    if (nextMode === "break") {
+      setActivityCategory("Break");
+      setActivityLabel("Break");
+    } else if (activityLabel === "Break") {
+      setActivityCategory("Studying");
+      setActivityLabel("Focused work");
+    }
+  }
+
+  function updateFocusMinutes(value: string) {
+    setFocusInput(value);
+    if (value.trim() === "") return;
+    const next = Math.max(1, Math.min(180, Number(value) || 1));
+    setFocusMinutes(next);
+    if (mode === "focus" && !isRunning) applyMinutes(next, "focus");
+  }
+
+  function updateBreakMinutes(value: string) {
+    setBreakInput(value);
+    if (value.trim() === "") return;
+    const next = Math.max(1, Math.min(60, Number(value) || 1));
+    setBreakMinutes(next);
+    if (mode === "break" && !isRunning) applyMinutes(next, "break");
+  }
+
+  function commitFocusMinutes() {
+    const next = Math.max(1, Math.min(180, Number(focusInput) || focusMinutes || 1));
+    setFocusMinutes(next);
+    setFocusInput(String(next));
+    if (mode === "focus" && !isRunning) applyMinutes(next, "focus");
+  }
+
+  function commitBreakMinutes() {
+    const next = Math.max(1, Math.min(60, Number(breakInput) || breakMinutes || 1));
+    setBreakMinutes(next);
+    setBreakInput(String(next));
+    if (mode === "break" && !isRunning) applyMinutes(next, "break");
+  }
+
+  function finishNow() {
+    if (!startedAtRef.current) return;
+    setIsRunning(false);
+    void logSession(startedAtRef.current, minutes, false);
+    startedAtRef.current = null;
+    setSecondsLeft(minutes * 60);
+  }
+
+  const workItems = useMemo<WorkItem[]>(() => {
+    const localItems = Object.entries(localGoals).flatMap(([offsetKey, goals]) => {
+      const offset = Number(offsetKey);
+      return goals.map((goal, index) => ({
+        id: `goal-${offset}-${index}-${goal.text}`,
+        label: goal.text,
+        dayLabel: taskDayLabel(offset),
+        source: "Goal",
+      }));
+    });
+
+    const taskItems = tasks
+      .filter((task) => task.day_offset >= 0 && task.day_offset < 7)
+      .sort((a, b) => a.day_offset - b.day_offset || a.sort - b.sort)
+      .map((task) => ({
+        id: `task-${task.id}`,
+        label: task.task,
+        dayLabel: taskDayLabel(task.day_offset),
+        source: "7-day",
+        category: task.tone.includes("emerald") ? "Studying" : undefined,
+      }));
+
+    return [...localItems, ...taskItems];
+  }, [localGoals, tasks]);
+
+  function selectWorkItem(id: string) {
+    setSelectedWorkId(id);
+    const item = workItems.find((work) => work.id === id);
+    if (!item) return;
+    setActivityLabel(item.label);
+    if (item.category) setActivityCategory(item.category);
+    setCustomCategory("");
+  }
+
+  const smallRadius = 58;
+  const smallCirc = 2 * Math.PI * smallRadius;
+  const progressPct = Math.round(progress * 100);
+  const modeLabel = mode === "break" ? "Rest" : "Focus";
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col items-center gap-8">
-      <div className="relative">
-        <svg width="280" height="280" viewBox="0 0 280 280">
-          <circle
-            cx="140"
-            cy="140"
-            r={radius}
-            stroke="hsl(var(--muted))"
-            strokeWidth="14"
-            fill="none"
-          />
-          <circle
-            cx="140"
-            cy="140"
-            r={radius}
-            stroke="hsl(var(--primary))"
-            strokeWidth="14"
-            fill="none"
-            strokeLinecap="round"
-            strokeDasharray={circ}
-            strokeDashoffset={circ * (1 - progress)}
-            transform="rotate(-90 140 140)"
-            style={{ transition: "stroke-dashoffset 1s linear" }}
-          />
-        </svg>
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <p className="text-6xl font-semibold tabular-nums">{format(secondsLeft)}</p>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {isRunning ? "Focus" : secondsLeft === 0 ? "Done" : "Ready"}
-          </p>
+    <div className={`grid gap-4 xl:grid-cols-[0.9fr_1.1fr] ${styles.focusShell}`}>
+      <section className={`${styles.panel} p-5`}>
+        <div className={styles.timerCard}>
+          <div className={styles.timerContent}>
+            <div className="min-w-0">
+              <div className={`${styles.timerText} tabular-nums`}>{format(secondsLeft)}</div>
+              <div className={styles.timerMeta}>
+                {isRunning ? `${modeLabel} in progress` : secondsLeft === 0 ? "Done" : "Ready"}
+              </div>
+              <div className={styles.timerSub}>
+                {activityLabel || modeLabel} · {minutes} min
+              </div>
+            </div>
+            <div className={styles.timerRingBox}>
+              <svg viewBox="0 0 140 140">
+                <circle
+                  cx="70"
+                  cy="70"
+                  r={smallRadius}
+                  fill="none"
+                  stroke="rgba(255,255,255,0.05)"
+                  strokeWidth="5"
+                />
+                <circle
+                  cx="70"
+                  cy="70"
+                  r={smallRadius}
+                  fill="none"
+                  stroke="var(--rowan-accent, #6BE3A4)"
+                  strokeWidth="5"
+                  strokeLinecap="round"
+                  strokeDasharray={smallCirc}
+                  strokeDashoffset={smallCirc * (1 - progress)}
+                  transform="rotate(-90 70 70)"
+                  style={{ transition: "stroke-dashoffset 1s linear" }}
+                />
+              </svg>
+              <div className={styles.timerRingOverlay}>
+                <div className={styles.timerRingPct}>{progressPct}%</div>
+                <div className={styles.timerRingLabel}>{mode}</div>
+              </div>
+            </div>
+          </div>
+          <div className={styles.timerBarTrack}>
+            <div className={styles.timerBarFill} style={{ width: `${progressPct}%` }} />
+          </div>
         </div>
-      </div>
 
-      <div className="flex gap-3">
-        <Button onClick={toggleStart} size="lg" className="min-w-32">
+      <div className="mt-5 flex flex-wrap justify-center gap-3">
+        <button onClick={toggleStart} className={`${styles.primaryButton} inline-flex h-12 min-w-32 items-center justify-center px-5`}>
           {isRunning ? (
             <>
               <Pause className="mr-2 h-4 w-4" />
@@ -161,65 +386,140 @@ export function PomodoroTimer({ initialMinutes }: { initialMinutes: number }) {
               {secondsLeft === minutes * 60 ? "Start" : "Resume"}
             </>
           )}
-        </Button>
-        <Button onClick={reset} variant="outline" size="lg">
+        </button>
+        <button onClick={reset} className={`${styles.ghostButton} inline-flex h-12 items-center justify-center px-5`}>
           <RotateCcw className="mr-2 h-4 w-4" />
           Reset
-        </Button>
-        <Button onClick={ringBell} variant="ghost" size="lg" title="Test bell">
+        </button>
+        <button
+          onClick={finishNow}
+          className={`${styles.ghostButton} inline-flex h-12 items-center justify-center px-5 disabled:opacity-40`}
+          disabled={!startedAtRef.current}
+        >
+          Log now
+        </button>
+        <button onClick={ringBell} className={`${styles.ghostButton} inline-flex h-12 w-12 items-center justify-center`} title="Test bell">
           <Volume2 className="h-4 w-4" />
-        </Button>
+        </button>
       </div>
+      {status && <p className="mt-4 text-center text-sm text-[#B8B6B0]">{status}</p>}
+      </section>
 
-      <div className="w-full space-y-3 rounded-lg border bg-card p-4">
-        <p className="text-sm font-medium">Presets</p>
-        <div className="grid grid-cols-4 gap-2">
-          {PRESETS.map((m) => (
-            <button
-              key={m}
-              type="button"
-              onClick={() => applyMinutes(m)}
-              className={`rounded-md border px-3 py-2 text-sm font-medium transition ${
-                minutes === m
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "bg-background text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {m}m
-            </button>
-          ))}
+      <section className={`${styles.panel} space-y-5 p-5`}>
+        <div>
+          <p className={styles.eyebrow}>Focus setup</p>
+          <h2 className="mt-1 text-xl font-semibold">What are you working on?</h2>
         </div>
 
-        <div className="flex items-end gap-2 pt-2">
-          <div className="flex-1">
-            <label className="text-xs font-medium text-muted-foreground">
-              Custom (1–180 min)
-            </label>
+        <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => switchMode("focus")}
+              className={`${styles.modeButton} ${mode === "focus" ? styles.modeActive : ""} px-4 py-3`}
+            >
+              <span className="block font-semibold">Focus</span>
+              <span className="font-mono text-xs opacity-75">{focusMinutes}m</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => switchMode("break")}
+              className={`${styles.modeButton} ${mode === "break" ? styles.modeActive : ""} px-4 py-3`}
+            >
+              <span className="block font-semibold">Rest</span>
+              <span className="font-mono text-xs opacity-75">{breakMinutes}m</span>
+            </button>
+        </div>
+
+        <div className="grid gap-3 md:grid-cols-2">
+          <label className="flex flex-col gap-1 text-xs font-bold uppercase tracking-[0.12em] text-[#B8B6B0]">
+            Focus time
             <input
               type="number"
               min={1}
               max={180}
-              value={customInput}
-              onChange={(e) => setCustomInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  const n = parseInt(customInput, 10);
-                  if (!Number.isNaN(n)) applyMinutes(n);
-                }
-              }}
-              className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+              value={focusInput}
+              onChange={(e) => updateFocusMinutes(e.target.value)}
+              onBlur={commitFocusMinutes}
+              className={styles.darkInput}
             />
-          </div>
-          <Button
-            onClick={() => {
-              const n = parseInt(customInput, 10);
-              if (!Number.isNaN(n)) applyMinutes(n);
-            }}
-          >
-            Apply
-          </Button>
+          </label>
+          <label className="flex flex-col gap-1 text-xs font-bold uppercase tracking-[0.12em] text-[#B8B6B0]">
+            Rest time
+            <input
+              type="number"
+              min={1}
+              max={60}
+              value={breakInput}
+              onChange={(e) => updateBreakMinutes(e.target.value)}
+              onBlur={commitBreakMinutes}
+              className={styles.darkInput}
+            />
+          </label>
         </div>
-      </div>
+
+        <div className="grid gap-3 md:grid-cols-[1fr_0.8fr]">
+          <label className="flex flex-col gap-1 text-xs font-bold uppercase tracking-[0.12em] text-[#B8B6B0]">
+            Activity
+            <input
+              value={activityLabel}
+              onChange={(e) => setActivityLabel(e.target.value)}
+              className={styles.darkInput}
+              placeholder="AFM433, LeetCode, DSC planning..."
+            />
+          </label>
+          <label className="flex flex-col gap-1 text-xs font-bold uppercase tracking-[0.12em] text-[#B8B6B0]">
+            Category
+            <select
+              value={activityCategory}
+              onChange={(e) => setActivityCategory(e.target.value)}
+              className={styles.darkSelect}
+            >
+              {ACTIVITY_CATEGORIES.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+
+        <label className="flex flex-col gap-1 text-xs font-bold uppercase tracking-[0.12em] text-[#B8B6B0]">
+          Custom category
+            <input
+            value={customCategory}
+            onChange={(e) => setCustomCategory(e.target.value)}
+            className={styles.darkInput}
+            placeholder="Type your own category, optional"
+            />
+        </label>
+
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <p className={styles.eyebrow}>Current work outstanding</p>
+            <span className="font-mono text-[10px] text-[#B8B6B0]">
+              {workItems.length} available
+            </span>
+          </div>
+          {workItems.length === 0 ? (
+            <p className="rounded-lg bg-white/[0.025] p-3 text-sm italic text-[#B8B6B0]">
+              Add tasks in the home dashboard and they will appear here.
+            </p>
+          ) : (
+            <select
+              value={selectedWorkId}
+              onChange={(event) => selectWorkItem(event.target.value)}
+              className={styles.darkSelect}
+            >
+              <option value="">Select a Home task or 7-day item...</option>
+              {workItems.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.dayLabel} · {item.source} · {item.label}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+      </section>
     </div>
   );
 }

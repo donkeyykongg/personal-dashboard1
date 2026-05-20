@@ -44,9 +44,6 @@ export default async function FinancesPage({
       <div className="dash-hub space-y-6">
         <header>
           <h1 className="text-2xl font-semibold tracking-tight text-white">Finances</h1>
-          <p className="mt-1 text-sm text-[#76746E]">
-            Net worth, subscriptions, cash flow, and business expenses.
-          </p>
         </header>
 
         {showImportBanner && (

@@ -46,8 +46,8 @@ export function FinancialSnapshot({
     <section className="space-y-3">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-medium text-muted-foreground">Money</p>
-          <h2 className="text-xl">Financial snapshot</h2>
+          <p className="text-sm font-medium text-[#B8B6B0]">Money</p>
+          <h2 className="text-xl text-white">Financial snapshot</h2>
         </div>
         <Link
           href="/finances"
@@ -63,13 +63,13 @@ export function FinancialSnapshot({
             className="rounded-xl border bg-card px-5 py-4 shadow-sm transition hover:shadow-md"
           >
             <div className="flex items-center justify-between">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              <p className="text-xs font-medium uppercase tracking-wide text-[#B8B6B0]">
                 {label}
               </p>
-              <Icon className="h-4 w-4 text-muted-foreground" />
+              <Icon className="h-4 w-4 text-[#B8B6B0]" />
             </div>
             <p className={`mt-3 font-mono text-3xl ${tone}`}>{value}</p>
-            <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
+            <p className="mt-1 text-xs text-[#B8B6B0]">{hint}</p>
           </div>
         ))}
       </div>

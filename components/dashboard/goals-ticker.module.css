@@ -50,8 +50,8 @@
   width: 7px;
   height: 7px;
   border-radius: 999px;
-  background: #6BE3A4;
-  box-shadow: 0 0 8px rgba(107, 227, 164, 0.7);
+  background: var(--rowan-accent, #6BE3A4);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--rowan-accent, #6BE3A4) 70%, transparent);
   animation: pulse 1.6s ease-in-out infinite;
 }
 
@@ -65,7 +65,7 @@
   font-size: 9.5px;
   font-weight: 800;
   letter-spacing: 0.18em;
-  color: #76746E;
+  color: #B8B6B0;
   text-transform: uppercase;
 }
 
@@ -97,9 +97,9 @@
   flex-shrink: 0;
 }
 
-.statusDone { color: #6BE3A4; }
-.statusPending { color: #76746E; }
-.statusEmpty { color: #76746E; }
+.statusDone { color: var(--rowan-accent, #6BE3A4); }
+.statusPending { color: #8B8880; }
+.statusEmpty { color: #8B8880; }
 
 .text {
   flex: 1;

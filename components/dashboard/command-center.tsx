@@ -52,7 +52,7 @@ function GoalPie({ pct }: { pct: number }) {
         cy="40"
         r={R}
         fill="none"
-        stroke="#6be3a4"
+        stroke="var(--rowan-accent, #6be3a4)"
         strokeWidth="6"
         strokeLinecap="round"
         strokeDasharray={`${filled} ${C}`}

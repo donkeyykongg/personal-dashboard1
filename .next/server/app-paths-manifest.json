@@ -1,7 +1,6 @@
 {
-  "/schedule/page": "app/schedule/page.js",
   "/dashboard/page": "app/dashboard/page.js",
-  "/notes/page": "app/notes/page.js",
+  "/reflections/page": "app/reflections/page.js",
   "/finances/page": "app/finances/page.js",
-  "/cash-flow/page": "app/cash-flow/page.js"
+  "/pomodoro/page": "app/pomodoro/page.js"
 }

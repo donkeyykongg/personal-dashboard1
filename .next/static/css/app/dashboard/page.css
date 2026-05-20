@@ -95,7 +95,7 @@
 
 .command-center_barFill__UK4iU {
   height: 100%;
-  background: #6be3a4;
+  background: var(--rowan-accent, #6be3a4);
   border-radius: 0 1px 1px 0;
 }
 
@@ -173,8 +173,8 @@
   width: 7px;
   height: 7px;
   border-radius: 999px;
-  background: #6BE3A4;
-  box-shadow: 0 0 8px rgba(107, 227, 164, 0.7);
+  background: var(--rowan-accent, #6BE3A4);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--rowan-accent, #6BE3A4) 70%, transparent);
   animation: goals-ticker_pulse__XnAyP 1.6s ease-in-out infinite;
 }
 
@@ -188,7 +188,7 @@
   font-size: 9.5px;
   font-weight: 800;
   letter-spacing: 0.18em;
-  color: #76746E;
+  color: #B8B6B0;
   text-transform: uppercase;
 }
 
@@ -220,9 +220,9 @@
   flex-shrink: 0;
 }
 
-.goals-ticker_statusDone__NlNm9 { color: #6BE3A4; }
-.goals-ticker_statusPending__3gOG7 { color: #76746E; }
-.goals-ticker_statusEmpty__RBnDO { color: #76746E; }
+.goals-ticker_statusDone__NlNm9 { color: var(--rowan-accent, #6BE3A4); }
+.goals-ticker_statusPending__3gOG7 { color: #8B8880; }
+.goals-ticker_statusEmpty__RBnDO { color: #8B8880; }
 
 .goals-ticker_text__br_bw {
   flex: 1;
@@ -271,9 +271,32 @@
 /*!*************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[7].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[7].use[3]!./components/dashboard/todo-list.module.css ***!
   \*************************************************************************************************************************************************************************************************************************************************************************************/
-.todo-list_section__fRboR { display: flex; flex-direction: column; gap: 14px; }
+.todo-list_section__fRboR {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 18px;
+}
 
-.todo-list_card___EwVB { position: relative; }
+.todo-list_cardsGrid__V3VIB {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  align-items: stretch;
+}
+
+@media (min-width: 980px) {
+  .todo-list_cardsGrid__V3VIB {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.todo-list_card___EwVB {
+  position: relative;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
 
 .todo-list_cardHeader__EK3un {
   display: flex;
@@ -380,6 +403,7 @@
   list-style: none;
   margin: 0;
   padding: 0;
+  flex: 1;
 }
 
 .todo-list_empty__2Tnk3 {
@@ -473,6 +497,7 @@
   outline: none;
   cursor: text;
   word-break: break-word;
+  line-height: 1.45;
 }
 .todo-list_text__uAb6u[contenteditable="true"] {
   outline: 1px solid rgba(255, 255, 255, 0.2);
@@ -569,24 +594,27 @@
 .todo-list_pushBtn__6fstQ:hover { color: var(--dh-text-primary); border-color: rgba(255, 255, 255, 0.28); }
 
 .todo-list_inputWrap__qMBbQ {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   gap: 8px;
-  align-items: center;
+  align-items: stretch;
   margin-top: 14px;
   padding-top: 14px;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
-  flex-wrap: wrap;
 }
 
 .todo-list_input__Ekw22 {
-  flex: 1;
-  min-width: 200px;
+  width: 100%;
+  min-width: 0;
+  min-height: 72px;
+  resize: vertical;
   padding: 11px 14px;
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.06);
   color: var(--dh-text-primary);
   font-size: 13px;
+  line-height: 1.45;
   outline: none;
   transition: border-color 0.2s ease, background 0.2s ease;
 }
@@ -606,6 +634,7 @@
   border-radius: 12px;
   cursor: pointer;
   font-size: 13px;
+  min-width: 96px;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.7),
     0 4px 12px rgba(0, 0, 0, 0.45);
@@ -627,6 +656,7 @@
   border-radius: 12px;
   cursor: pointer;
   font-size: 13px;
+  min-width: 112px;
   transition: background 0.2s ease, border-color 0.2s ease;
 }
 .todo-list_polishBtn__xlMkL:hover {
@@ -654,5 +684,15 @@
   padding: 3px 8px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.04);
+}
+
+@media (max-width: 720px) {
+  .todo-list_inputWrap__qMBbQ {
+    grid-template-columns: 1fr;
+  }
+  .todo-list_addBtn___sJS2,
+  .todo-list_polishBtn__xlMkL {
+    width: 100%;
+  }
 }
 
