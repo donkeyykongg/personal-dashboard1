@@ -84,6 +84,8 @@ export async function deleteAccount(id: string) {
     .select("*")
     .eq("id", id)
     .single();
+  const { error } = await supabase.from("financial_accounts").delete().eq("id", id);
+  if (error) throw new Error(error.message);
   if (existing) {
     await writeActivity(supabase, {
       account_id: null,
@@ -93,8 +95,6 @@ export async function deleteAccount(id: string) {
       kind: "delete",
     });
   }
-  const { error } = await supabase.from("financial_accounts").delete().eq("id", id);
-  if (error) throw new Error(error.message);
   await refreshSnapshot();
   revalidatePath("/finances");
 }
