@@ -1,93 +1,42 @@
-import { AccountForm } from "@/components/finances/account-form";
-import { AccountList } from "@/components/finances/account-list";
-import { BalanceSheetSummary } from "@/components/finances/balance-sheet-summary";
-import { EntryForm } from "@/components/finances/entry-form";
-import { EntryList } from "@/components/finances/entry-list";
-import { ExpenseBreakdownPie } from "@/components/finances/expense-breakdown-pie";
-import { FinancesTabs } from "@/components/finances/finances-tabs";
-import { IncomeVsExpensesChart } from "@/components/finances/income-vs-expenses-chart";
-import { RecurringExpensesList } from "@/components/finances/recurring-expenses-list";
-import { StatementAnalyzer } from "@/components/finances/statement-analyzer";
-import { SummaryCards } from "@/components/finances/summary-cards";
-import { SubscriptionList } from "@/components/subscriptions/subscription-list";
-import { SubscriptionSummary } from "@/components/subscriptions/subscription-summary";
+// app/finances/page.tsx
 import { createClient } from "@/lib/supabase/server";
-import { getFinanceOverview } from "@/lib/finances";
-import type { FinanceEntry, Subscription } from "@/lib/supabase/types";
+import { ExchangeRatesProvider } from "@/lib/exchange-rates";
+import { FinanceTabs, parseTab } from "@/components/finances/finance-tabs";
 
 export const dynamic = "force-dynamic";
 
-export default async function FinancesPage() {
+export default async function FinancesPage({
+  searchParams,
+}: {
+  searchParams: { tab?: string };
+}) {
   const supabase = createClient();
+  const active = parseTab(searchParams.tab);
 
-  const [overview, allExpensesRes, subsRes] = await Promise.all([
-    getFinanceOverview(supabase),
-    supabase.from("expenses").select("*").order("date", { ascending: false }),
-    supabase.from("subscriptions").select("*").order("created_at", { ascending: false }),
-  ]);
-
-  const allExpenses = (allExpensesRes.data ?? []) as FinanceEntry[];
-  const subscriptions = (subsRes.data ?? []) as Subscription[];
-  const error = overview.error;
+  // Data fetching is deferred to each section component (added in later tasks).
+  void supabase;
 
   return (
-    <div className="space-y-6">
-      <header className="space-y-2">
-        <h1 className="text-3xl font-semibold tracking-tight">Finances</h1>
-        <p className="max-w-2xl text-sm text-muted-foreground">
-          Track income, expenses, subscriptions, and analyze bank statements.
-        </p>
-      </header>
+    <ExchangeRatesProvider>
+      <div className="dash-hub space-y-6">
+        <header>
+          <h1 className="text-2xl font-semibold tracking-tight text-white">Finances</h1>
+          <p className="mt-1 text-sm text-[#76746E]">
+            Net worth, subscriptions, cash flow, and business expenses.
+          </p>
+        </header>
 
-      <FinancesTabs
-        overviewContent={
-          <div className="space-y-6">
-            <SummaryCards income={overview.currentIncome} expenses={overview.currentExpenses} />
-            <BalanceSheetSummary
-              totalCash={overview.totalCash}
-              totalInflow={overview.currentIncome}
-              totalDebt={overview.totalDebt}
-              netWorth={overview.netWorth}
-            />
-            <IncomeVsExpensesChart data={overview.monthly} />
-            <ExpenseBreakdownPie expenses={allExpenses} />
-            <StatementAnalyzer />
-            <section className="grid gap-6 xl:grid-cols-[0.85fr_1.15fr]">
-              <EntryForm />
-              <div className="grid gap-6 lg:grid-cols-2">
-                <AccountForm />
-                <AccountList accounts={overview.accounts} />
-              </div>
-            </section>
-            <section className="grid gap-6 xl:grid-cols-3">
-              <EntryList
-                title="Recent inflows"
-                entries={overview.recentIncome}
-                table="income"
-                tone="text-emerald-600"
-              />
-              <EntryList
-                title="Recent expenses"
-                entries={overview.recentExpenses}
-                table="expenses"
-                tone="text-rose-600"
-              />
-              <RecurringExpensesList entries={overview.recurringExpenses} />
-            </section>
-            {error && (
-              <p className="text-sm text-destructive">
-                Couldn&apos;t load from Supabase: {error}
-              </p>
-            )}
-          </div>
-        }
-        subscriptionsContent={
-          <div className="space-y-6">
-            <SubscriptionSummary subscriptions={subscriptions} />
-            <SubscriptionList subscriptions={subscriptions} />
-          </div>
-        }
-      />
-    </div>
+        {/* Renewal ticker placeholder — filled by Phase 5 */}
+        <div data-slot="renewal-ticker" />
+
+        <FinanceTabs active={active} />
+
+        {/* Section content — filled by Phase 4-7 */}
+        {active === "net-worth" && <div data-slot="net-worth">Net Worth tab coming in Phase 4</div>}
+        {active === "subscriptions" && <div data-slot="subscriptions">Subscriptions tab coming in Phase 5</div>}
+        {active === "cash-flow" && <div data-slot="cash-flow">Cash Flow tab coming in Phase 6</div>}
+        {active === "business" && <div data-slot="business">Business tab coming in Phase 7</div>}
+      </div>
+    </ExchangeRatesProvider>
   );
 }
