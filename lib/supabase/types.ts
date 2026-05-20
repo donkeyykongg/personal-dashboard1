@@ -102,6 +102,12 @@ export type Subscription = {
   billing_cycle: BillingCycle;
   category: SubscriptionCategory;
   active: boolean;
+  next_renewal: string | null;
+  from_account_id: string | null;
+  auto_deduct: boolean;
+  last_deducted_at: string | null;
+  entered_amount: number | null;
+  entered_currency: string;
   created_at: string;
 };
 
