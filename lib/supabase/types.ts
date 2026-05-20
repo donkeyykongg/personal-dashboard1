@@ -181,3 +181,15 @@ export type Task = {
   completed: boolean;
   created_at: string;
 };
+
+export type NwActivityKind = "add" | "edit" | "delete";
+
+export type NwActivity = {
+  id: string;
+  account_id: string | null;
+  account_name: string;
+  nw_category: NwCategory;
+  delta_chf: number;
+  kind: NwActivityKind;
+  created_at: string;
+};
