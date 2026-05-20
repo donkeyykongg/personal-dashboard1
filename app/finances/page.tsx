@@ -2,6 +2,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { ExchangeRatesProvider } from "@/lib/exchange-rates";
 import { FinanceTabs, parseTab } from "@/components/finances/finance-tabs";
+import { NetWorthSection } from "@/components/finances/net-worth/net-worth-section";
+import { getNetWorthData } from "@/lib/finances/net-worth";
+import type { Subscription } from "@/lib/supabase/types";
 
 export const dynamic = "force-dynamic";
 
@@ -13,8 +16,11 @@ export default async function FinancesPage({
   const supabase = createClient();
   const active = parseTab(searchParams.tab);
 
-  // Data fetching is deferred to each section component (added in later tasks).
-  void supabase;
+  const [nwData, subsRes] = await Promise.all([
+    getNetWorthData(supabase),
+    supabase.from("subscriptions").select("*"),
+  ]);
+  const subscriptions = (subsRes.data ?? []) as Subscription[];
 
   return (
     <ExchangeRatesProvider>
@@ -26,15 +32,24 @@ export default async function FinancesPage({
           </p>
         </header>
 
-        {/* Renewal ticker placeholder — filled by Phase 5 */}
         <div data-slot="renewal-ticker" />
 
         <FinanceTabs active={active} />
 
-        {/* Section content — filled by Phase 4-7 */}
-        {active === "net-worth" && <div data-slot="net-worth">Net Worth tab coming in Phase 4</div>}
-        {active === "subscriptions" && <div data-slot="subscriptions">Subscriptions tab coming in Phase 5</div>}
-        {active === "cash-flow" && <div data-slot="cash-flow">Cash Flow tab coming in Phase 6</div>}
+        {active === "net-worth" && (
+          <NetWorthSection
+            accounts={nwData.accounts}
+            activity={nwData.activity}
+            snapshots={nwData.snapshots}
+            subscriptions={subscriptions}
+          />
+        )}
+        {active === "subscriptions" && (
+          <div data-slot="subscriptions">Subscriptions tab coming in Phase 5</div>
+        )}
+        {active === "cash-flow" && (
+          <div data-slot="cash-flow">Cash Flow tab coming in Phase 6</div>
+        )}
         {active === "business" && <div data-slot="business">Business tab coming in Phase 7</div>}
       </div>
     </ExchangeRatesProvider>
