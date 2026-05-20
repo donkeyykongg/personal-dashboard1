@@ -38,7 +38,7 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeFlashScript }} />
       </head>
-      <body className="min-h-screen bg-background font-sans text-foreground antialiased">
+      <body className="min-h-screen bg-[#0A0A0B] font-sans text-foreground antialiased">
         <ThemeProvider>
           <main className="min-h-screen overflow-y-auto pt-24">
             <div className="mx-auto max-w-7xl px-6 py-10">{children}</div>

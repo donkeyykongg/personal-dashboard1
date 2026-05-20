@@ -40,7 +40,7 @@ export function NetWorthHeader({ accounts }: { accounts: FinancialAccount[] }) {
           <option value="CHF">CHF</option>
           <option value="USD">USD</option>
           <option value="EUR">EUR</option>
-          <option value="GBP">GBP</option>
+          <option value="CAD">CAD</option>
         </select>
       </div>
     </div>

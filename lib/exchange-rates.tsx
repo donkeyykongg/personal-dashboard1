@@ -3,11 +3,11 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 
-export type Currency = "CHF" | "USD" | "EUR" | "GBP";
+export type Currency = "CHF" | "USD" | "EUR" | "CAD";
 
 type Rates = Record<Currency, number>;
 
-const DEFAULT_RATES: Rates = { CHF: 1, USD: 1, EUR: 1, GBP: 1 };
+const DEFAULT_RATES: Rates = { CHF: 1, USD: 1, EUR: 1, CAD: 1 };
 
 type ContextValue = {
   rates: Rates;
@@ -27,7 +27,7 @@ export function ExchangeRatesProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const saved = typeof window !== "undefined" ? window.localStorage.getItem(CURRENCY_KEY) : null;
-    if (saved === "CHF" || saved === "USD" || saved === "EUR" || saved === "GBP") {
+    if (saved === "CHF" || saved === "USD" || saved === "EUR" || saved === "CAD") {
       setCurrencyState(saved);
     }
     let cancelled = false;
@@ -39,7 +39,7 @@ export function ExchangeRatesProvider({ children }: { children: ReactNode }) {
           CHF: 1,
           USD: Number(data.rates.USD) || 1,
           EUR: Number(data.rates.EUR) || 1,
-          GBP: Number(data.rates.GBP) || 1,
+          CAD: Number(data.rates.CAD) || 1,
         });
       })
       .catch(() => {});
