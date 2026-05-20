@@ -242,3 +242,31 @@ export async function processAutoDeductSubs(): Promise<{ deducted: number }> {
   }
   return { deducted };
 }
+
+export async function addBusinessExpense(input: {
+  item: string;
+  amount: number;
+  category: string;
+  date: string;
+}) {
+  const supabase = createClient();
+  const { error } = await supabase.from("expenses").insert({
+    item: input.item,
+    amount: input.amount,
+    category: input.category,
+    date: input.date,
+    is_business: true,
+  });
+  if (error) throw new Error(error.message);
+  revalidatePath("/finances");
+}
+
+export async function setExpenseBusinessFlag(id: string, isBusiness: boolean) {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("expenses")
+    .update({ is_business: isBusiness })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/finances");
+}
