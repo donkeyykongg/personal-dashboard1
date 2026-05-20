@@ -4,7 +4,10 @@ import { ExchangeRatesProvider } from "@/lib/exchange-rates";
 import { FinanceTabs } from "@/components/finances/finance-tabs";
 import { parseTab } from "@/lib/finances/finance-tab";
 import { NetWorthSection } from "@/components/finances/net-worth/net-worth-section";
+import { SubscriptionsSection } from "@/components/finances/subscriptions/subscriptions-section";
+import { RenewalTicker } from "@/components/finances/renewal-ticker";
 import { getNetWorthData } from "@/lib/finances/net-worth";
+import { processAutoDeductSubs } from "@/app/finances/actions";
 import type { Subscription } from "@/lib/supabase/types";
 
 export const dynamic = "force-dynamic";
@@ -14,12 +17,15 @@ export default async function FinancesPage({
 }: {
   searchParams: { tab?: string };
 }) {
+  // Fire-and-process auto-deduct before reading subscription/account state.
+  await processAutoDeductSubs();
+
   const supabase = createClient();
   const active = parseTab(searchParams.tab);
 
   const [nwData, subsRes] = await Promise.all([
     getNetWorthData(supabase),
-    supabase.from("subscriptions").select("*"),
+    supabase.from("subscriptions").select("*").order("created_at", { ascending: false }),
   ]);
   const subscriptions = (subsRes.data ?? []) as Subscription[];
 
@@ -33,7 +39,7 @@ export default async function FinancesPage({
           </p>
         </header>
 
-        <div data-slot="renewal-ticker" />
+        <RenewalTicker subscriptions={subscriptions} />
 
         <FinanceTabs active={active} />
 
@@ -46,7 +52,7 @@ export default async function FinancesPage({
           />
         )}
         {active === "subscriptions" && (
-          <div data-slot="subscriptions">Subscriptions tab coming in Phase 5</div>
+          <SubscriptionsSection subscriptions={subscriptions} accounts={nwData.accounts} />
         )}
         {active === "cash-flow" && (
           <div data-slot="cash-flow">Cash Flow tab coming in Phase 6</div>
