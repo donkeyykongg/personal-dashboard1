@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import { Sidebar } from "@/components/layout/sidebar";
+import { BottomTabBar } from "@/components/layout/bottom-tab-bar";
 import { ThemeProvider } from "@/components/layout/theme-provider";
-import { SidebarStateProvider } from "@/components/layout/sidebar-state";
 import { CommandPalette } from "@/components/layout/command-palette";
 
 const fontSans = Inter({
@@ -41,15 +40,11 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen bg-background font-sans text-foreground antialiased">
         <ThemeProvider>
-          <SidebarStateProvider>
-            <div className="flex min-h-screen">
-              <Sidebar />
-              <main className="flex-1 overflow-y-auto">
-                <div className="mx-auto max-w-7xl px-6 py-10">{children}</div>
-              </main>
-            </div>
-            <CommandPalette />
-          </SidebarStateProvider>
+          <main className="min-h-screen overflow-y-auto pb-24">
+            <div className="mx-auto max-w-7xl px-6 py-10">{children}</div>
+          </main>
+          <CommandPalette />
+          <BottomTabBar />
         </ThemeProvider>
       </body>
     </html>
