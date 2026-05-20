@@ -10,6 +10,7 @@ export type FinanceEntry = {
   is_recurring?: boolean | null;
   recurring_interval?: "weekly" | "monthly" | "yearly" | null;
   next_due_date?: string | null;
+  is_business?: boolean;
   created_at: string;
 };
 
