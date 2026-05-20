@@ -40,7 +40,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen bg-background font-sans text-foreground antialiased">
         <ThemeProvider>
-          <main className="min-h-screen overflow-y-auto pb-24">
+          <main className="min-h-screen overflow-y-auto pt-24">
             <div className="mx-auto max-w-7xl px-6 py-10">{children}</div>
           </main>
           <CommandPalette />

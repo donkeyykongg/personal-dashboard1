@@ -38,8 +38,8 @@ export function MoreSheet({ open, onOpenChange }: Props) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
-        side="bottom"
-        className="rounded-t-2xl border-white/10 bg-[#0A0A0B] text-white"
+        side="top"
+        className="rounded-b-2xl border-white/10 bg-[#0A0A0B] text-white"
       >
         <SheetHeader>
           <SheetTitle className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#76746E]">

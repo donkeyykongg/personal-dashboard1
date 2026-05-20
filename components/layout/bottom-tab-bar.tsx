@@ -32,9 +32,9 @@ export function BottomTabBar() {
   return (
     <>
       <nav
-        className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-center gap-1 px-3 pb-[max(8px,env(safe-area-inset-bottom))] pt-2"
+        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center gap-1 px-3 pb-2 pt-[max(8px,env(safe-area-inset-top))]"
         style={{
-          background: "linear-gradient(180deg, transparent, rgba(5,5,6,0.92) 30%)",
+          background: "#0A0A0B",
           backdropFilter: "blur(20px)",
           WebkitBackdropFilter: "blur(20px)",
         }}
@@ -42,7 +42,7 @@ export function BottomTabBar() {
       >
         <div
           aria-hidden
-          className="pointer-events-none absolute left-3 right-3 top-0 h-px"
+          className="pointer-events-none absolute left-3 right-3 bottom-0 h-px"
           style={{
             background:
               "linear-gradient(90deg, transparent, rgba(255,255,255,0.10), transparent)",
