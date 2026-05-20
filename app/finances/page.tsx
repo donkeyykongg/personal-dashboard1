@@ -7,8 +7,10 @@ import { NetWorthSection } from "@/components/finances/net-worth/net-worth-secti
 import { SubscriptionsSection } from "@/components/finances/subscriptions/subscriptions-section";
 import { RenewalTicker } from "@/components/finances/renewal-ticker";
 import { getNetWorthData } from "@/lib/finances/net-worth";
+import { getFinanceOverview } from "@/lib/finances";
 import { processAutoDeductSubs } from "@/app/finances/actions";
-import type { Subscription } from "@/lib/supabase/types";
+import { CashFlowSection } from "@/components/finances/cash-flow/cash-flow-section";
+import type { Subscription, FinanceEntry } from "@/lib/supabase/types";
 
 export const dynamic = "force-dynamic";
 
@@ -23,9 +25,10 @@ export default async function FinancesPage({
   const supabase = createClient();
   const active = parseTab(searchParams.tab);
 
-  const [nwData, subsRes] = await Promise.all([
+  const [nwData, subsRes, overview] = await Promise.all([
     getNetWorthData(supabase),
     supabase.from("subscriptions").select("*").order("created_at", { ascending: false }),
+    getFinanceOverview(supabase),
   ]);
   const subscriptions = (subsRes.data ?? []) as Subscription[];
 
@@ -55,7 +58,11 @@ export default async function FinancesPage({
           <SubscriptionsSection subscriptions={subscriptions} accounts={nwData.accounts} />
         )}
         {active === "cash-flow" && (
-          <div data-slot="cash-flow">Cash Flow tab coming in Phase 6</div>
+          <CashFlowSection
+            monthly={overview.monthly}
+            recentIncome={overview.recentIncome}
+            recentExpenses={overview.recentExpenses.filter((e: FinanceEntry) => !e.is_business)}
+          />
         )}
         {active === "business" && <div data-slot="business">Business tab coming in Phase 7</div>}
       </div>
