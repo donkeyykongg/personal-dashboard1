@@ -152,6 +152,8 @@ export type MonthlyCashFlow = {
 
 export type FinancialAccountKind = "asset" | "liability" | "income" | "expense";
 
+export type NwCategory = "bank" | "stocks" | "crypto" | "other";
+
 export type FinancialAccount = {
   id: string;
   name: string;
@@ -159,6 +161,7 @@ export type FinancialAccount = {
   amount: number;
   interest_rate: number | null;
   min_payment: number | null;
+  nw_category: NwCategory;
   created_at: string;
 };
 
