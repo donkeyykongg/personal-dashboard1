@@ -1,7 +1,10 @@
 "use client";
 
+import { Repeat } from "lucide-react";
 import { useExchangeRates } from "@/lib/exchange-rates";
 import type { FinanceEntry } from "@/lib/supabase/types";
+
+export type FlowListItem = FinanceEntry & { is_subscription?: boolean };
 
 export function FlowRecentList({
   title,
@@ -9,7 +12,7 @@ export function FlowRecentList({
   direction,
 }: {
   title: string;
-  entries: FinanceEntry[];
+  entries: FlowListItem[];
   direction: "in" | "out";
 }) {
   const { format } = useExchangeRates();
@@ -40,12 +43,22 @@ export function FlowRecentList({
                 style={{ background: color, boxShadow: `0 0 6px ${color}` }}
               />
               <div className="min-w-0">
-                <div className="truncate text-[13px] font-semibold text-white">
-                  {e.item || e.category}
+                <div className="flex items-center gap-1.5">
+                  <span className="truncate text-[13px] font-semibold text-white">
+                    {e.item || e.category}
+                  </span>
+                  {e.is_subscription && (
+                    <span
+                      className="inline-flex items-center gap-0.5 rounded-full border border-[#F2C063]/30 bg-[#F2C063]/10 px-1.5 py-px font-mono text-[8.5px] font-bold uppercase tracking-[0.10em] text-[#F2C063]"
+                      title="Recurring subscription"
+                    >
+                      <Repeat className="h-2.5 w-2.5" />
+                      SUB
+                    </span>
+                  )}
                 </div>
                 <div className="font-mono text-[10.5px] uppercase tracking-[0.04em] text-[#76746E]">
                   {e.category}
-                  {e.is_business ? " · business" : ""}
                 </div>
               </div>
               <span

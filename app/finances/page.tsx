@@ -10,8 +10,8 @@ import { getNetWorthData } from "@/lib/finances/net-worth";
 import { getFinanceOverview } from "@/lib/finances";
 import { processAutoDeductSubs } from "@/app/finances/actions";
 import { CashFlowSection } from "@/components/finances/cash-flow/cash-flow-section";
-import { BusinessExpensesSection } from "@/components/finances/business/business-expenses-section";
-import type { Subscription, FinanceEntry } from "@/lib/supabase/types";
+import { FinanceOverviewSection } from "@/components/finances/overview/finance-overview-section";
+import type { Subscription } from "@/lib/supabase/types";
 
 export const dynamic = "force-dynamic";
 
@@ -26,16 +26,12 @@ export default async function FinancesPage({
   const supabase = createClient();
   const active = parseTab(searchParams.tab);
 
-  const [nwData, subsRes, overview, businessIncomeRes, businessExpenseRes] = await Promise.all([
+  const [nwData, subsRes, overview] = await Promise.all([
     getNetWorthData(supabase),
     supabase.from("subscriptions").select("*").order("created_at", { ascending: false }),
     getFinanceOverview(supabase),
-    supabase.from("income").select("*").eq("is_business", true).order("date", { ascending: false }),
-    supabase.from("expenses").select("*").eq("is_business", true).order("date", { ascending: false }),
   ]);
   const subscriptions = (subsRes.data ?? []) as Subscription[];
-  const businessIncome = (businessIncomeRes.data ?? []) as FinanceEntry[];
-  const businessExpenses = (businessExpenseRes.data ?? []) as FinanceEntry[];
 
   const importedCount = Number(searchParams.imported ?? 0);
   const skippedCount = Number(searchParams.skipped ?? 0);
@@ -59,6 +55,15 @@ export default async function FinancesPage({
 
         <FinanceTabs active={active} />
 
+        {active === "overview" && (
+          <FinanceOverviewSection
+            monthly={overview.monthly}
+            expenses={overview.expenses}
+            income={overview.income}
+            subscriptions={overview.subscriptions}
+            netWorth={overview.netWorth ?? 0}
+          />
+        )}
         {active === "net-worth" && (
           <NetWorthSection
             accounts={nwData.accounts}
@@ -75,13 +80,11 @@ export default async function FinancesPage({
             monthly={overview.monthly}
             recentIncome={overview.recentIncome}
             recentExpenses={overview.recentExpenses}
+            subscriptions={subscriptions}
             categoryDeltas={overview.expenseCategoryDeltas}
             knownIncomeCategories={overview.knownIncomeCategories}
             knownExpenseCategories={overview.knownExpenseCategories}
           />
-        )}
-        {active === "business" && (
-          <BusinessExpensesSection income={businessIncome} expenses={businessExpenses} />
         )}
       </div>
     </ExchangeRatesProvider>

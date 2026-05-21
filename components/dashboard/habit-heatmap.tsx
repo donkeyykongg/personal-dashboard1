@@ -1,8 +1,9 @@
-import type { PomodoroSession, Reflection } from "@/lib/supabase/types";
+import type { HabitLog, PomodoroSession, Reflection } from "@/lib/supabase/types";
 
 type Props = {
   sessions: PomodoroSession[];
   reflections: Reflection[];
+  habitLogs?: HabitLog[];
   weeks?: number;
 };
 
@@ -10,7 +11,7 @@ function dayKey(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-export function HabitHeatmap({ sessions, reflections, weeks = 16 }: Props) {
+export function HabitHeatmap({ sessions, reflections, habitLogs = [], weeks = 16 }: Props) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -29,6 +30,10 @@ export function HabitHeatmap({ sessions, reflections, weeks = 16 }: Props) {
   });
   reflections.forEach((r) => {
     counts.set(r.date, (counts.get(r.date) ?? 0) + 1);
+  });
+  habitLogs.forEach((l) => {
+    if (!l.completed) return;
+    counts.set(l.date, (counts.get(l.date) ?? 0) + 1);
   });
 
   const days: { key: string; date: Date; count: number; future: boolean }[] = [];

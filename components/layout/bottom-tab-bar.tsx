@@ -4,7 +4,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Home, Wallet, Timer, StickyNote, MoreHorizontal } from "lucide-react";
+import { Home, Wallet, Timer, BookOpen, Brain, MoreHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MoreSheet } from "./more-sheet";
 
@@ -18,8 +18,9 @@ type Tab = {
 const tabs: Tab[] = [
   { href: "/dashboard", label: "Home", icon: Home },
   { href: "/finances", label: "Finances", icon: Wallet, matchPrefix: "/finances" },
+  { href: "/brain", label: "Brain", icon: Brain, matchPrefix: "/brain" },
+  { href: "/journal", label: "Journal", icon: BookOpen, matchPrefix: "/journal" },
   { href: "/pomodoro", label: "Focus", icon: Timer, matchPrefix: "/pomodoro" },
-  { href: "/notes", label: "Notes", icon: StickyNote, matchPrefix: "/notes" },
 ];
 
 export function BottomTabBar() {

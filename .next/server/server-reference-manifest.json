@@ -1,5 +1,69 @@
 {
   "node": {
+    "344061e2428304207be372e79e565abec29f5966": {
+      "workers": {
+        "app/brain/page": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2FUsers%2Fdominicng%2FDesktop%2Fpersonal-dashboard%2Fapp%2Fbrain%2Factions.ts%22%2C%5B%22generateBriefing%22%2C%22createPage%22%2C%22deletePage%22%2C%22updatePage%22%5D%5D%5D&__client_imported__=true!",
+        "app/brain/[id]/page": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2FUsers%2Fdominicng%2FDesktop%2Fpersonal-dashboard%2Fapp%2Fbrain%2Factions.ts%22%2C%5B%22generateBriefing%22%2C%22createPage%22%2C%22deletePage%22%2C%22updatePage%22%5D%5D%5D&__client_imported__=true!"
+      },
+      "layer": {
+        "app/brain/page": "action-browser",
+        "app/brain/[id]/page": "action-browser"
+      }
+    },
+    "4f533626b95378a3eb7dc697e3c1dd41e4a1f72e": {
+      "workers": {
+        "app/brain/page": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2FUsers%2Fdominicng%2FDesktop%2Fpersonal-dashboard%2Fapp%2Fbrain%2Factions.ts%22%2C%5B%22generateBriefing%22%2C%22createPage%22%2C%22deletePage%22%2C%22updatePage%22%5D%5D%5D&__client_imported__=true!",
+        "app/brain/[id]/page": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2FUsers%2Fdominicng%2FDesktop%2Fpersonal-dashboard%2Fapp%2Fbrain%2Factions.ts%22%2C%5B%22generateBriefing%22%2C%22createPage%22%2C%22deletePage%22%2C%22updatePage%22%5D%5D%5D&__client_imported__=true!"
+      },
+      "layer": {
+        "app/brain/page": "action-browser",
+        "app/brain/[id]/page": "action-browser"
+      }
+    },
+    "6fd2cc1578a2a00f5758e1098fab381f54211a7f": {
+      "workers": {
+        "app/brain/page": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2FUsers%2Fdominicng%2FDesktop%2Fpersonal-dashboard%2Fapp%2Fbrain%2Factions.ts%22%2C%5B%22generateBriefing%22%2C%22createPage%22%2C%22deletePage%22%2C%22updatePage%22%5D%5D%5D&__client_imported__=true!",
+        "app/brain/[id]/page": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2FUsers%2Fdominicng%2FDesktop%2Fpersonal-dashboard%2Fapp%2Fbrain%2Factions.ts%22%2C%5B%22generateBriefing%22%2C%22createPage%22%2C%22deletePage%22%2C%22updatePage%22%5D%5D%5D&__client_imported__=true!"
+      },
+      "layer": {
+        "app/brain/page": "action-browser",
+        "app/brain/[id]/page": "action-browser"
+      }
+    },
+    "7014dece8150b7999c4c8b405df5c6ad43cbba84": {
+      "workers": {
+        "app/brain/page": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2FUsers%2Fdominicng%2FDesktop%2Fpersonal-dashboard%2Fapp%2Fbrain%2Factions.ts%22%2C%5B%22generateBriefing%22%2C%22createPage%22%2C%22deletePage%22%2C%22updatePage%22%5D%5D%5D&__client_imported__=true!",
+        "app/brain/[id]/page": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2FUsers%2Fdominicng%2FDesktop%2Fpersonal-dashboard%2Fapp%2Fbrain%2Factions.ts%22%2C%5B%22generateBriefing%22%2C%22createPage%22%2C%22deletePage%22%2C%22updatePage%22%5D%5D%5D&__client_imported__=true!"
+      },
+      "layer": {
+        "app/brain/page": "action-browser",
+        "app/brain/[id]/page": "action-browser"
+      }
+    },
+    "59273ea0b41ca7c011b4968e01178aade054483f": {
+      "workers": {
+        "app/journal/page": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2FUsers%2Fdominicng%2FDesktop%2Fpersonal-dashboard%2Fapp%2Fjournal%2Factions.ts%22%2C%5B%22deleteJournalEntry%22%2C%22generateSummary%22%2C%22createJournalEntry%22%5D%5D%5D&__client_imported__=true!"
+      },
+      "layer": {
+        "app/journal/page": "action-browser"
+      }
+    },
+    "8cb046db7cf79bebe46454c3f9dcd0f8277c1b0e": {
+      "workers": {
+        "app/journal/page": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2FUsers%2Fdominicng%2FDesktop%2Fpersonal-dashboard%2Fapp%2Fjournal%2Factions.ts%22%2C%5B%22deleteJournalEntry%22%2C%22generateSummary%22%2C%22createJournalEntry%22%5D%5D%5D&__client_imported__=true!"
+      },
+      "layer": {
+        "app/journal/page": "action-browser"
+      }
+    },
+    "b84f09889c0bf2aee5ecc1bf484cc7796910cd62": {
+      "workers": {
+        "app/journal/page": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2FUsers%2Fdominicng%2FDesktop%2Fpersonal-dashboard%2Fapp%2Fjournal%2Factions.ts%22%2C%5B%22deleteJournalEntry%22%2C%22generateSummary%22%2C%22createJournalEntry%22%5D%5D%5D&__client_imported__=true!"
+      },
+      "layer": {
+        "app/journal/page": "action-browser"
+      }
+    },
     "23b34629360526847b8bfe69c841d8016c089244": {
       "workers": {
         "app/finances/page": "(rsc)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2FUsers%2Fdominicng%2FDesktop%2Fpersonal-dashboard%2Fapp%2Ffinances%2Factions.ts%22%2C%5B%22addBusinessExpense%22%2C%22updateSubscription%22%2C%22setExpenseBusinessFlag%22%2C%22processAutoDeductSubs%22%2C%22deleteAccount%22%2C%22addSubscription%22%2C%22deleteSubscription%22%2C%22addCashFlowEntry%22%2C%22addAccount%22%2C%22updateAccount%22%5D%5D%5D&__client_imported__=!"
@@ -82,5 +146,5 @@
     }
   },
   "edge": {},
-  "encryptionKey": "4Y2SqWoP4ZbHb0Byzab6tEV4uaVdTJ06sBvZN9dDDzI="
+  "encryptionKey": "60lly5JvMxnqveiKDhPSTCV/E1D+v4eaVObG0vaZyRI="
 }

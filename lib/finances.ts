@@ -240,6 +240,9 @@ export async function getFinanceOverview(supabase: SupabaseClient) {
     currentExpenses: expenses
       .filter((entry) => entry.date.startsWith(currentMonth))
       .reduce((sum, entry) => sum + (Number(entry.amount) || 0), 0) + currSubscriptionOutflow,
+    income,
+    expenses,
+    subscriptions,
     recentIncome: income.slice(0, 6),
     recentExpenses: expenses.slice(0, 6),
     expenseCategoryDeltas,

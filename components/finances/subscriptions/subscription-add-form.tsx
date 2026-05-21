@@ -9,6 +9,7 @@ import type {
   SubscriptionAmountType,
 } from "@/lib/supabase/types";
 import { addSubscription } from "@/app/finances/actions";
+import { CalendarDateField } from "@/components/ui/calendar-with-time-picker-inline";
 
 export function SubscriptionAddForm({ accounts }: { accounts: FinancialAccount[] }) {
   const { rates } = useExchangeRates();
@@ -147,12 +148,10 @@ export function SubscriptionAddForm({ accounts }: { accounts: FinancialAccount[]
 
         {amountType === "total" && (
           <Field label="Start date" className="md:col-span-3">
-            <input
-              type="date"
+            <CalendarDateField
               value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="h-10 w-full rounded-lg border border-white/8 bg-white/[0.035] px-3 text-sm text-white outline-none focus:border-[#6BE3A4]/50"
-              style={{ colorScheme: "dark" }}
+              onChange={setStartDate}
+              calendarClassName="bg-[#080e1a] text-white"
             />
           </Field>
         )}
@@ -161,12 +160,10 @@ export function SubscriptionAddForm({ accounts }: { accounts: FinancialAccount[]
           label={amountType === "total" ? "End date" : "Next renewal"}
           className="md:col-span-3"
         >
-          <input
-            type="date"
+          <CalendarDateField
             value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            className="h-10 w-full rounded-lg border border-white/8 bg-white/[0.035] px-3 text-sm text-white outline-none focus:border-[#6BE3A4]/50"
-            style={{ colorScheme: "dark" }}
+            onChange={setEndDate}
+            calendarClassName="bg-[#080e1a] text-white"
           />
         </Field>
 

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { CalendarWithTimePickerInline } from "@/components/ui/calendar-with-time-picker-inline";
 import {
   Dialog,
   DialogContent,
@@ -30,6 +31,15 @@ function toLocalInput(iso: string) {
 
 function fromLocalInput(local: string) {
   return new Date(local).toISOString();
+}
+
+function splitLocalInput(local: string) {
+  const [date = "", time = ""] = local.split("T");
+  return { date, time };
+}
+
+function combineLocalInput(date: string, time: string) {
+  return `${date}T${time || "00:00"}`;
 }
 
 export function EventFormDialog({ event, defaultStart, open, onOpenChange }: Props) {
@@ -97,6 +107,9 @@ export function EventFormDialog({ event, defaultStart, open, onOpenChange }: Pro
     }
   }
 
+  const startParts = splitLocalInput(start);
+  const endParts = splitLocalInput(end);
+
   async function remove() {
     if (!event) return;
     if (!confirm(`Delete "${event.title}"?`)) return;
@@ -130,27 +143,21 @@ export function EventFormDialog({ event, defaultStart, open, onOpenChange }: Pro
               autoFocus
             />
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="grid gap-2">
-              <Label htmlFor="ev-start">Start</Label>
-              <Input
-                id="ev-start"
-                type="datetime-local"
-                value={start}
-                onChange={(e) => setStart(e.target.value)}
-                required
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="ev-end">End</Label>
-              <Input
-                id="ev-end"
-                type="datetime-local"
-                value={end}
-                onChange={(e) => setEnd(e.target.value)}
-                required
-              />
-            </div>
+          <div className="grid gap-2">
+            <Label>When</Label>
+            <CalendarWithTimePickerInline
+              date={startParts.date}
+              startTime={startParts.time}
+              endTime={endParts.time}
+              disabled={busy}
+              onDateChange={(date) => {
+                setStart(combineLocalInput(date, startParts.time));
+                setEnd(combineLocalInput(date, endParts.time));
+              }}
+              onStartTimeChange={(time) => setStart(combineLocalInput(startParts.date, time))}
+              onEndTimeChange={(time) => setEnd(combineLocalInput(startParts.date, time))}
+              className="max-w-full"
+            />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="ev-loc">Location</Label>

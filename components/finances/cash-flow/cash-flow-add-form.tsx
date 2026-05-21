@@ -3,6 +3,7 @@
 import { useState, useTransition, type ReactNode } from "react";
 import { ArrowDownLeft, ArrowUpRight, Plus } from "lucide-react";
 import { addCashFlowEntry } from "@/app/finances/actions";
+import { CalendarDateField } from "@/components/ui/calendar-with-time-picker-inline";
 
 const fallbackIncomeCategories = ["Income", "Client", "Payout", "Refund", "Other"];
 const fallbackExpenseCategories = ["Software", "Subscriptions", "Ads", "Operations", "Other"];
@@ -21,7 +22,6 @@ export function CashFlowAddForm({
   const [item, setItem] = useState("");
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [notes, setNotes] = useState("");
-  const [isBusiness, setIsBusiness] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const categories = Array.from(
@@ -59,7 +59,7 @@ export function CashFlowAddForm({
           item: item.trim(),
           date,
           notes: notes.trim() || null,
-          is_business: isBusiness,
+          is_business: false,
         });
         setAmount("");
         setItem("");
@@ -131,12 +131,10 @@ export function CashFlowAddForm({
         </Field>
 
         <Field label="Date" className="lg:col-span-2">
-          <input
-            type="date"
+          <CalendarDateField
             value={date}
-            onChange={(event) => setDate(event.target.value)}
-            className="h-10 w-full rounded-lg border border-white/8 bg-black/20 px-3 text-sm text-white outline-none focus:border-[#6BE3A4]/50"
-            style={{ colorScheme: "dark" }}
+            onChange={setDate}
+            calendarClassName="bg-[#080e1a] text-white"
           />
         </Field>
 
@@ -150,16 +148,7 @@ export function CashFlowAddForm({
         </Field>
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-        <label className="inline-flex items-center gap-2 text-xs font-semibold text-[#B8B6B0]">
-          <input
-            type="checkbox"
-            checked={isBusiness}
-            onChange={(event) => setIsBusiness(event.target.checked)}
-            className="h-4 w-4"
-          />
-          Biz
-        </label>
+      <div className="mt-3 flex flex-wrap items-center justify-end gap-3">
         <button
           type="submit"
           disabled={isPending}

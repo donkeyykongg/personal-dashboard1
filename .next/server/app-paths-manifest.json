@@ -1,5 +1,13 @@
 {
+  "/_not-found/page": "app/_not-found/page.js",
+  "/pomodoro/page": "app/pomodoro/page.js",
   "/dashboard/page": "app/dashboard/page.js",
-  "/finances/page": "app/finances/page.js",
-  "/_not-found/page": "app/_not-found/page.js"
+  "/brain/[id]/page": "app/brain/[id]/page.js",
+  "/assistant/page": "app/assistant/page.js",
+  "/brain/page": "app/brain/page.js",
+  "/journal/page": "app/journal/page.js",
+  "/schedule/page": "app/schedule/page.js",
+  "/finances/import/page": "app/finances/import/page.js",
+  "/kanban/page": "app/kanban/page.js",
+  "/finances/page": "app/finances/page.js"
 }

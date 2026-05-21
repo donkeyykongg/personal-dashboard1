@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CalendarDateField } from "@/components/ui/calendar-with-time-picker-inline";
 import {
   Dialog,
   DialogContent,
@@ -282,12 +283,10 @@ function EntryDialog({
 
           <div className="grid gap-2">
             <Label htmlFor="edit-date">Date</Label>
-            <Input
+            <CalendarDateField
               id="edit-date"
-              type="date"
               value={date}
-              onChange={(event) => setDate(event.target.value)}
-              required
+              onChange={setDate}
             />
           </div>
 
@@ -329,12 +328,10 @@ function EntryDialog({
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="edit-next-due-date">Next due date</Label>
-                  <Input
+                  <CalendarDateField
                     id="edit-next-due-date"
-                    type="date"
                     value={nextDueDate}
-                    onChange={(event) => setNextDueDate(event.target.value)}
-                    required={isRecurring}
+                    onChange={setNextDueDate}
                   />
                 </div>
               </div>

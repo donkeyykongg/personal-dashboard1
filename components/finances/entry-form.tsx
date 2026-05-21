@@ -3,6 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { CalendarDateField } from "@/components/ui/calendar-with-time-picker-inline";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -179,12 +180,10 @@ export function EntryForm() {
 
           <div className="grid gap-2">
             <Label htmlFor="date">Date</Label>
-            <Input
+            <CalendarDateField
               id="date"
-              type="date"
               value={date}
-              onChange={(e) => setDate(e.target.value)}
-              required
+              onChange={setDate}
             />
           </div>
 
@@ -228,12 +227,10 @@ export function EntryForm() {
 
                 <div className="grid gap-2">
                   <Label htmlFor="next-due-date">Next due date</Label>
-                  <Input
+                  <CalendarDateField
                     id="next-due-date"
-                    type="date"
                     value={nextDueDate}
-                    onChange={(e) => setNextDueDate(e.target.value)}
-                    required={isRecurring}
+                    onChange={setNextDueDate}
                   />
                 </div>
               </div>

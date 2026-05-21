@@ -51,12 +51,19 @@ export async function POST(req: NextRequest) {
 
   try {
     const supabase = createAdminClient();
-    const { error } = await supabase.from("inbox_items").insert({
-      content: parsed.content,
-      destination: parsed.destination,
-    });
-
-    if (error) throw new Error(error.message);
+    if (parsed.destination === "journal") {
+      const { error } = await supabase.from("journal_entries").insert({
+        content: parsed.content,
+        source: "telegram",
+      });
+      if (error) throw new Error(error.message);
+    } else {
+      const { error } = await supabase.from("inbox_items").insert({
+        content: parsed.content,
+        destination: parsed.destination,
+      });
+      if (error) throw new Error(error.message);
+    }
 
     await safeReply(parsed.chatId, parsed.reply);
     return NextResponse.json({

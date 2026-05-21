@@ -18,11 +18,13 @@ export type TelegramUpdate = {
   edited_message?: TelegramMessage;
 };
 
+export type TelegramDestination = "task" | "note" | "voice" | "journal";
+
 export type ParsedTelegramCapture =
   | {
       ok: true;
       chatId: string;
-      destination: "task" | "note" | "voice";
+      destination: TelegramDestination;
       content: string;
       reply: string;
     }
@@ -67,7 +69,7 @@ export function parseTelegramUpdate(update: TelegramUpdate): ParsedTelegramCaptu
       status: 200,
       handled: true,
       reply:
-        "Send /todo Buy milk, /note Dashboard idea, or plain text to save a to-do. Finance commands are scaffolded: /expense, /income, /bizexpense, /bizincome, /cash.",
+        "Send plain text to journal it. /todo Buy milk for a task, /note Idea for a note, /journal (or /reflect) Mood is great for an explicit journal entry. Finance commands are scaffolded: /expense, /income, /bizexpense, /bizincome, /cash.",
     };
   }
 
@@ -110,42 +112,55 @@ export function parseTelegramUpdate(update: TelegramUpdate): ParsedTelegramCaptu
       };
     }
 
-    if (kind !== "todo" && kind !== "note") {
+    const journalAliases = new Set(["journal", "reflect", "reflection"]);
+    const knownKinds = new Set(["todo", "note", ...journalAliases]);
+    if (!knownKinds.has(kind)) {
       return {
         ok: false,
         chatId,
         status: 200,
         handled: true,
-        reply: `I do not know /${kind} yet. Use /todo, /note, or plain text.`,
+        reply: `I do not know /${kind} yet. Use /todo, /note, /journal (or /reflect), or plain text.`,
       };
     }
 
     if (!content) {
+      const example =
+        kind === "todo"
+          ? "Buy milk"
+          : kind === "note"
+            ? "Idea"
+            : "Mood is great today";
       return {
         ok: false,
         chatId,
         status: 200,
         handled: true,
-        reply: `Add text after /${kind}, like /${kind} ${kind === "todo" ? "Buy milk" : "Idea"}.`,
+        reply: `Add text after /${kind}, like /${kind} ${example}.`,
       };
     }
 
-    const destination = kind === "note" ? "note" : "task";
+    const destination: TelegramDestination =
+      kind === "note" ? "note" : journalAliases.has(kind) ? "journal" : "task";
+    const reply =
+      destination === "journal"
+        ? `📓 Logged to journal: ${content}`
+        : `✅ Saved to inbox: ${content}`;
     return {
       ok: true,
       chatId,
       destination,
       content,
-      reply: `✅ Saved to inbox: ${content}`,
+      reply,
     };
   }
 
   return {
     ok: true,
     chatId,
-    destination: "task",
+    destination: "journal",
     content: rawText,
-    reply: `✅ Saved to inbox: ${rawText}`,
+    reply: `📓 Logged to journal: ${rawText}`,
   };
 }
 

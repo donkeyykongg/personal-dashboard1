@@ -208,3 +208,87 @@ export type NwSnapshot = {
   total_chf: number;
   captured_at: string;
 };
+
+export type Habit = {
+  id: string;
+  name: string;
+  category: string | null;
+  parent_id: string | null;
+  sort_order: number;
+  active: boolean;
+  created_at: string;
+};
+
+export type HabitLog = {
+  id: string;
+  habit_id: string;
+  date: string;
+  completed: boolean;
+  completed_at: string;
+};
+
+export type JournalEntry = {
+  id: string;
+  content: string;
+  source: "app" | "telegram";
+  created_at: string;
+  date: string;
+};
+
+export type JournalSummaryPeriod = "day" | "week" | "month";
+
+export type JournalSummary = {
+  id: string;
+  period: JournalSummaryPeriod;
+  period_start: string;
+  summary: string;
+  model: string | null;
+  created_at: string;
+};
+
+export type BrainPage = {
+  id: string;
+  parent_id: string | null;
+  title: string;
+  icon: string | null;
+  status_dot: "green" | "yellow" | "red";
+  content_md: string;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type BrainBriefing = {
+  id: string;
+  page_id: string;
+  summary: string;
+  model: string | null;
+  created_at: string;
+};
+
+export type TodoGoal = {
+  id: string;
+  date: string;
+  text: string;
+  done: boolean;
+  done_at: string | null;
+  queued: boolean;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type TodoStreak = {
+  id: number;
+  count: number;
+  last_processed_date: string | null;
+  updated_at: string;
+};
+
+export type ReminderDelivery = {
+  id: string;
+  kind: string;
+  target_id: string;
+  reminder_key: string;
+  sent_at: string;
+};
