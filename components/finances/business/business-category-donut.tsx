@@ -40,7 +40,7 @@ export function BusinessCategoryDonut({ entries }: { entries: FinanceEntry[] }) 
   return (
     <div className="rounded-xl bg-white/[0.025] p-4">
       <div className="mb-2 font-mono text-[9.5px] font-extrabold uppercase tracking-[0.16em] text-[#76746E]">
-        Breakdown
+        Expense breakdown
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-[140px_1fr] sm:items-center">
         <div className="relative mx-auto h-[140px] w-[140px]">
@@ -77,7 +77,7 @@ export function BusinessCategoryDonut({ entries }: { entries: FinanceEntry[] }) 
         <div className="flex flex-col gap-1">
           {slices.length === 0 ? (
             <div className="py-2 text-center text-[11px] italic text-[#76746E]">
-              No business expenses yet
+              No Biz expenses yet
             </div>
           ) : (
             slices.map((s) => {

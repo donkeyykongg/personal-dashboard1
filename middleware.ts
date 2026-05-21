@@ -4,6 +4,10 @@ import type { NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const publicPath =
+    pathname === "/login" ||
+    pathname === "/guest" ||
+    pathname.startsWith("/guest/");
 
   // Build a mutable response so we can forward refreshed auth cookies
   let response = NextResponse.next({ request: { headers: request.headers } });
@@ -40,7 +44,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Not logged in → require /login
-  if (!user && pathname !== "/login") {
+  if (!user && !publicPath) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 

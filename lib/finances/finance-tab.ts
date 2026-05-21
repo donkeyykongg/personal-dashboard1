@@ -8,7 +8,7 @@ export const FINANCE_TABS = [
   { key: "net-worth", label: "Net Worth" },
   { key: "subscriptions", label: "Subscriptions" },
   { key: "cash-flow", label: "Cash Flow" },
-  { key: "business", label: "Business" },
+  { key: "business", label: "Biz" },
 ] as const;
 
 export type FinanceTabKey = (typeof FINANCE_TABS)[number]["key"];

@@ -3,7 +3,12 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import type { NwCategory, Subscription, BillingCycle } from "@/lib/supabase/types";
+import type {
+  NwCategory,
+  Subscription,
+  BillingCycle,
+  SubscriptionAmountType,
+} from "@/lib/supabase/types";
 import {
   writeActivity,
   maybeSnapshot,
@@ -125,11 +130,25 @@ export async function addSubscription(input: {
   entered_amount: number;
   entered_currency: string;
   billing_cycle: BillingCycle;
+  amount_type: SubscriptionAmountType;
+  paid_on: string | null;
   next_renewal: string | null;
   from_account_id: string | null;
   auto_deduct: boolean;
+  already_outflow: boolean;
 }) {
   const supabase = createClient();
+  if (input.amount_type === "total") {
+    if (!input.paid_on || !input.next_renewal) {
+      throw new Error("Total prepaid subscriptions need a Start date and End date.");
+    }
+    if (
+      new Date(`${input.next_renewal}T00:00`).getTime() <=
+      new Date(`${input.paid_on}T00:00`).getTime()
+    ) {
+      throw new Error("End date must be after Start date.");
+    }
+  }
   // billing_date keeps day-of-month for legacy compatibility
   let billing_date = 1;
   if (input.next_renewal) {
@@ -144,10 +163,13 @@ export async function addSubscription(input: {
     category: "personal",
     active: true,
     next_renewal: input.next_renewal,
+    paid_on: input.paid_on,
     from_account_id: input.from_account_id,
-    auto_deduct: input.auto_deduct,
+    auto_deduct: input.already_outflow ? false : input.auto_deduct,
     entered_amount: input.entered_amount,
     entered_currency: input.entered_currency,
+    amount_type: input.amount_type,
+    already_outflow: input.already_outflow,
   });
   if (error) throw new Error(error.message);
   revalidatePath("/finances");
@@ -160,9 +182,12 @@ export async function updateSubscription(input: {
   entered_amount?: number;
   entered_currency?: string;
   billing_cycle?: BillingCycle;
+  amount_type?: SubscriptionAmountType;
+  paid_on?: string | null;
   next_renewal?: string | null;
   from_account_id?: string | null;
   auto_deduct?: boolean;
+  already_outflow?: boolean;
 }) {
   const supabase = createClient();
   const patch: Record<string, unknown> = {};
@@ -171,9 +196,36 @@ export async function updateSubscription(input: {
   if (input.entered_amount !== undefined) patch.entered_amount = input.entered_amount;
   if (input.entered_currency !== undefined) patch.entered_currency = input.entered_currency;
   if (input.billing_cycle !== undefined) patch.billing_cycle = input.billing_cycle;
+  if (input.amount_type !== undefined) patch.amount_type = input.amount_type;
+  if (input.paid_on !== undefined) patch.paid_on = input.paid_on;
   if (input.next_renewal !== undefined) patch.next_renewal = input.next_renewal;
   if (input.from_account_id !== undefined) patch.from_account_id = input.from_account_id;
   if (input.auto_deduct !== undefined) patch.auto_deduct = input.auto_deduct;
+  if (input.already_outflow !== undefined) {
+    patch.already_outflow = input.already_outflow;
+    if (input.already_outflow) patch.auto_deduct = false;
+  }
+  if (
+    input.amount_type !== undefined ||
+    input.paid_on !== undefined ||
+    input.next_renewal !== undefined
+  ) {
+    const { data: existing, error: readError } = await supabase
+      .from("subscriptions")
+      .select("amount_type, paid_on, next_renewal")
+      .eq("id", input.id)
+      .single();
+    if (readError) throw new Error(readError.message);
+    const nextType = (input.amount_type ?? existing?.amount_type) as SubscriptionAmountType;
+    const nextStart = input.paid_on !== undefined ? input.paid_on : existing?.paid_on ?? null;
+    const nextEnd =
+      input.next_renewal !== undefined ? input.next_renewal : existing?.next_renewal ?? null;
+    if (nextType === "total" && nextStart && nextEnd) {
+      if (new Date(`${nextEnd}T00:00`).getTime() <= new Date(`${nextStart}T00:00`).getTime()) {
+        throw new Error("End date must be after Start date.");
+      }
+    }
+  }
   const { error } = await supabase.from("subscriptions").update(patch).eq("id", input.id);
   if (error) throw new Error(error.message);
   revalidatePath("/finances");
@@ -272,6 +324,32 @@ export async function addBusinessExpense(input: {
     date: input.date,
     is_business: true,
   });
+  if (error) throw new Error(error.message);
+  revalidatePath("/finances");
+}
+
+export async function addCashFlowEntry(input: {
+  type: "income" | "expense";
+  amount: number;
+  category: string;
+  item: string;
+  date: string;
+  notes: string | null;
+  is_business: boolean;
+}) {
+  const supabase = createClient();
+  const table = input.type === "income" ? "income" : "expenses";
+  const payload: Record<string, string | number | boolean | null> = {
+    amount: input.amount,
+    category: input.category,
+    item: input.item || null,
+    date: input.date,
+    notes: input.notes,
+  };
+
+  if (input.is_business) payload.is_business = true;
+
+  const { error } = await supabase.from(table).insert(payload);
   if (error) throw new Error(error.message);
   revalidatePath("/finances");
 }

@@ -26,14 +26,16 @@ export default async function FinancesPage({
   const supabase = createClient();
   const active = parseTab(searchParams.tab);
 
-  const [nwData, subsRes, overview, businessRes] = await Promise.all([
+  const [nwData, subsRes, overview, businessIncomeRes, businessExpenseRes] = await Promise.all([
     getNetWorthData(supabase),
     supabase.from("subscriptions").select("*").order("created_at", { ascending: false }),
     getFinanceOverview(supabase),
+    supabase.from("income").select("*").eq("is_business", true).order("date", { ascending: false }),
     supabase.from("expenses").select("*").eq("is_business", true).order("date", { ascending: false }),
   ]);
   const subscriptions = (subsRes.data ?? []) as Subscription[];
-  const businessEntries = (businessRes.data ?? []) as FinanceEntry[];
+  const businessIncome = (businessIncomeRes.data ?? []) as FinanceEntry[];
+  const businessExpenses = (businessExpenseRes.data ?? []) as FinanceEntry[];
 
   const importedCount = Number(searchParams.imported ?? 0);
   const skippedCount = Number(searchParams.skipped ?? 0);
@@ -72,11 +74,15 @@ export default async function FinancesPage({
           <CashFlowSection
             monthly={overview.monthly}
             recentIncome={overview.recentIncome}
-            recentExpenses={overview.recentExpenses.filter((e: FinanceEntry) => !e.is_business)}
+            recentExpenses={overview.recentExpenses}
             categoryDeltas={overview.expenseCategoryDeltas}
+            knownIncomeCategories={overview.knownIncomeCategories}
+            knownExpenseCategories={overview.knownExpenseCategories}
           />
         )}
-        {active === "business" && <BusinessExpensesSection entries={businessEntries} />}
+        {active === "business" && (
+          <BusinessExpensesSection income={businessIncome} expenses={businessExpenses} />
+        )}
       </div>
     </ExchangeRatesProvider>
   );

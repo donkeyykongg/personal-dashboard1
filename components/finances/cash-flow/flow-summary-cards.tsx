@@ -21,8 +21,10 @@ export function FlowSummaryCards({ monthly }: { monthly: MonthlyFinancePoint[] }
   const prev = monthly[monthly.length - 2];
   const inflow = last?.income ?? 0;
   const outflow = last?.expenses ?? 0;
+  const net = last?.net ?? inflow - outflow;
   const inflowDelta = delta(inflow, prev?.income ?? 0);
   const outflowDelta = delta(outflow, prev?.expenses ?? 0);
+  const netDelta = delta(net, prev?.net ?? (prev?.income ?? 0) - (prev?.expenses ?? 0));
 
   const recent = monthly.slice(-3);
   const W = 100;
@@ -31,7 +33,7 @@ export function FlowSummaryCards({ monthly }: { monthly: MonthlyFinancePoint[] }
   const maxOut = Math.max(1, ...recent.map((m) => m.expenses));
 
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+    <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
       <SummaryCard
         label="Inflow this month"
         amount={format(inflow)}
@@ -55,6 +57,24 @@ export function FlowSummaryCards({ monthly }: { monthly: MonthlyFinancePoint[] }
           x: (i / Math.max(1, recent.length - 1)) * W,
           y: H - (m.expenses / maxOut) * H,
         }))}
+      />
+      <SummaryCard
+        label="Net cash flow"
+        amount={format(net)}
+        color="#7DD3FC"
+        delta={netDelta}
+        deltaIsGood={(d) => d.dir === "up"}
+        formatAbs={(n) => format(n)}
+        sparkPath={recent.map((m, i) => {
+          const value = m.net ?? m.income - m.expenses;
+          const values = recent.map((x) => x.net ?? x.income - x.expenses);
+          const min = Math.min(...values, 0);
+          const max = Math.max(...values, 1);
+          return {
+            x: (i / Math.max(1, recent.length - 1)) * W,
+            y: H - ((value - min) / Math.max(1, max - min)) * H,
+          };
+        })}
       />
     </div>
   );

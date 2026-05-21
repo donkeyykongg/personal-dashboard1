@@ -17,6 +17,7 @@ export type MonthlyPoint = {
   month: string; // "Jan 2026"
   income: number;
   expenses: number;
+  net?: number;
 };
 
 export function IncomeVsExpensesChart({ data }: { data: MonthlyPoint[] }) {
@@ -59,6 +60,14 @@ export function IncomeVsExpensesChart({ data }: { data: MonthlyPoint[] }) {
                 dataKey="expenses"
                 name="Expenses"
                 stroke="#f43f5e"
+                strokeWidth={2.5}
+                dot={{ r: 3 }}
+              />
+              <Line
+                type="monotone"
+                dataKey="net"
+                name="Net cash flow"
+                stroke="#7dd3fc"
                 strokeWidth={2.5}
                 dot={{ r: 3 }}
               />

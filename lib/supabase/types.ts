@@ -98,6 +98,7 @@ export type OauthToken = {
 
 export type SubscriptionCategory = "tools" | "software" | "personal";
 export type BillingCycle = "monthly" | "yearly" | "weekly";
+export type SubscriptionAmountType = "monthly" | "total";
 
 export type Subscription = {
   id: string;
@@ -113,6 +114,9 @@ export type Subscription = {
   last_deducted_at: string | null;
   entered_amount: number | null;
   entered_currency: string;
+  amount_type: SubscriptionAmountType;
+  already_outflow: boolean;
+  paid_on: string | null;
   created_at: string;
 };
 

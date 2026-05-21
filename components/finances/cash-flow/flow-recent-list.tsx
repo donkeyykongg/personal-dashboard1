@@ -45,6 +45,7 @@ export function FlowRecentList({
                 </div>
                 <div className="font-mono text-[10.5px] uppercase tracking-[0.04em] text-[#76746E]">
                   {e.category}
+                  {e.is_business ? " · business" : ""}
                 </div>
               </div>
               <span

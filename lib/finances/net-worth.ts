@@ -59,6 +59,24 @@ export function totalByCategory(accounts: FinancialAccount[], category: NwCatego
 
 export function monthlyEquivalentCHF(sub: Subscription): number {
   const amt = Number(sub.amount) || 0;
+  if (sub.amount_type === "total") {
+    if (sub.next_renewal) {
+      const renewal = new Date(`${sub.next_renewal}T00:00`);
+      if (!isNaN(renewal.getTime())) {
+        const paidOn = sub.paid_on ? new Date(`${sub.paid_on}T00:00`) : null;
+        const periodStart = paidOn && !isNaN(paidOn.getTime()) ? paidOn : new Date(renewal);
+        if (!paidOn || isNaN(paidOn.getTime())) {
+          if (sub.billing_cycle === "weekly") periodStart.setDate(periodStart.getDate() - 7);
+          else if (sub.billing_cycle === "yearly") {
+            periodStart.setFullYear(periodStart.getFullYear() - 1);
+          } else periodStart.setMonth(periodStart.getMonth() - 1);
+        }
+        if (renewal.getTime() <= periodStart.getTime()) return 0;
+        const days = Math.max(1, (renewal.getTime() - periodStart.getTime()) / 86_400_000);
+        return (amt / days) * (365.25 / 12);
+      }
+    }
+  }
   switch (sub.billing_cycle) {
     case "weekly":
       return amt * 4.345;

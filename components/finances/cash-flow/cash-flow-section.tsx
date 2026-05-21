@@ -8,17 +8,22 @@ import { IncomeVsExpensesChart } from "@/components/finances/income-vs-expenses-
 import { FlowSummaryCards } from "./flow-summary-cards";
 import { FlowRecentList } from "./flow-recent-list";
 import { CategoryDeltas, type CategoryDelta } from "./category-deltas";
+import { CashFlowAddForm } from "./cash-flow-add-form";
 
 export function CashFlowSection({
   monthly,
   recentIncome,
   recentExpenses,
   categoryDeltas,
+  knownIncomeCategories,
+  knownExpenseCategories,
 }: {
   monthly: MonthlyFinancePoint[];
   recentIncome: FinanceEntry[];
   recentExpenses: FinanceEntry[];
   categoryDeltas: CategoryDelta[];
+  knownIncomeCategories: string[];
+  knownExpenseCategories: string[];
 }) {
   return (
     <div className="space-y-4">
@@ -33,6 +38,11 @@ export function CashFlowSection({
       </div>
 
       <FlowSummaryCards monthly={monthly} />
+
+      <CashFlowAddForm
+        knownIncomeCategories={knownIncomeCategories}
+        knownExpenseCategories={knownExpenseCategories}
+      />
 
       <CategoryDeltas deltas={categoryDeltas} />
 
