@@ -279,6 +279,7 @@ function GoalCard({
           .update({ done: checked, done_at: doneAt })
           .eq("id", target.id);
       }
+      emitGoalsChanged();
     },
     [goals, persistGoals, supabase]
   );
@@ -293,6 +294,7 @@ function GoalCard({
       if (target.id) {
         await supabase.from("todo_goals").update({ text }).eq("id", target.id);
       }
+      emitGoalsChanged();
     },
     [goals, persistGoals, supabase]
   );
@@ -307,6 +309,7 @@ function GoalCard({
       if (target.id) {
         await supabase.from("todo_goals").delete().eq("id", target.id);
       }
+      emitGoalsChanged();
     },
     [goals, persistGoals, supabase]
   );
@@ -323,6 +326,7 @@ function GoalCard({
       if (target.id) {
         await supabase.from("todo_goals").update({ queued }).eq("id", target.id);
       }
+      emitGoalsChanged();
       window.setTimeout(() => setFlashIndex(null), 480);
     },
     [goals, persistGoals, supabase]
@@ -345,6 +349,7 @@ function GoalCard({
           supabase.from("todo_goals").update({ sort_order: u.sort_order }).eq("id", u.id)
         )
       );
+      emitGoalsChanged();
     },
     [goals, persistGoals, supabase]
   );
@@ -379,6 +384,7 @@ function GoalCard({
     }
     const next = goals.filter((g) => g.done);
     await persistGoals(next);
+    emitGoalsChanged();
   }, [goals, persistGoals, supabase, tomorrowDate]);
 
   const flashStatus = useCallback((text: string, error = false) => {
@@ -413,6 +419,7 @@ function GoalCard({
       setGoals((curr) =>
         curr.map((g) => (g.tempId === tempId ? toLocal(data as TodoGoal) : g))
       );
+      emitGoalsChanged();
     }
   }, [date, goals, persistGoals, supabase]);
 
@@ -690,6 +697,7 @@ export function TodoList({
       ]);
       setTodayList((t as TodoGoal[] | null) ?? []);
       setTomorrowList((tm as TodoGoal[] | null) ?? []);
+      emitGoalsChanged();
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

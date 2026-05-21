@@ -15,6 +15,12 @@ type Props = {
 
 type HabitNode = Habit & { children: HabitNode[] };
 
+function emitHabitsChanged() {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("habits-changed"));
+  }
+}
+
 function buildTree(habits: Habit[]): HabitNode[] {
   const map = new Map<string, HabitNode>();
   habits.forEach((h) => map.set(h.id, { ...h, children: [] }));
@@ -123,6 +129,7 @@ export function DailyHabits({ habits, logs }: Props) {
         s.delete(habit.id);
         return s;
       });
+      emitHabitsChanged();
       startTransition(() => router.refresh());
     },
     [logSet, router, today]
@@ -169,6 +176,7 @@ export function DailyHabits({ habits, logs }: Props) {
 
     setNewName("");
     setAdding(false);
+    emitHabitsChanged();
     startTransition(() => router.refresh());
   }, [habits, newName, router]);
 
@@ -176,6 +184,7 @@ export function DailyHabits({ habits, logs }: Props) {
     async (id: string) => {
       const supabase = createClient();
       await supabase.from("habits").update({ active: false }).eq("id", id);
+      emitHabitsChanged();
       startTransition(() => router.refresh());
     },
     [router]

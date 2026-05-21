@@ -1,29 +1,25 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { getActiveDateString } from "@/lib/dates";
+import type { Habit, HabitLog, TodoGoal } from "@/lib/supabase/types";
+import { buildTodayProgress, type TodayProgress } from "./today-progress";
 import styles from "./command-center.module.css";
 
 // Waterloo, ON — change to match your location
 const LAT = 43.4723;
 const LON = -80.5449;
 
+type Props = {
+  initialHabits: Habit[];
+  initialHabitLogs: HabitLog[];
+  initialTodos: TodoGoal[];
+  date: string;
+};
+
 function getActiveDate(d: Date): Date {
   return d.getHours() < 6 ? new Date(d.getTime() - 86_400_000) : d;
-}
-
-function getGoalCompletion() {
-  const now = new Date();
-  const key = `goals:${getActiveDate(now).toISOString().slice(0, 10)}`;
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return { done: 0, total: 0, pct: 0 };
-    const goals = JSON.parse(raw) as { done: boolean }[];
-    const total = goals.length;
-    const done = goals.filter((g) => g.done).length;
-    return { done, total, pct: total > 0 ? Math.round((done / total) * 100) : 0 };
-  } catch {
-    return { done: 0, total: 0, pct: 0 };
-  }
 }
 
 function wmoIcon(code: number): string {
@@ -74,9 +70,21 @@ function GoalPie({ pct }: { pct: number }) {
   );
 }
 
-export function CommandCenter() {
+export function CommandCenter({
+  initialHabits,
+  initialHabitLogs,
+  initialTodos,
+  date,
+}: Props) {
   const [now, setNow] = useState<Date | null>(null);
-  const [goals, setGoals] = useState({ done: 0, total: 0, pct: 0 });
+  const [goals, setGoals] = useState<TodayProgress>(() =>
+    buildTodayProgress({
+      habits: initialHabits,
+      habitLogs: initialHabitLogs,
+      todos: initialTodos,
+      date,
+    })
+  );
   const [weather, setWeather] = useState<{
     temp: number;
     icon: string;
@@ -87,7 +95,6 @@ export function CommandCenter() {
   useEffect(() => {
     const tick = () => {
       setNow(new Date());
-      setGoals(getGoalCompletion());
     };
     tick();
     const id = setInterval(tick, 60_000);
@@ -108,13 +115,64 @@ export function CommandCenter() {
       }
     })();
 
-    const refresh = () => setGoals(getGoalCompletion());
-    window.addEventListener("storage", refresh);
-    window.addEventListener("goals-changed", refresh);
     return () => {
       clearInterval(id);
-      window.removeEventListener("storage", refresh);
+    };
+  }, []);
+
+  useEffect(() => {
+    setGoals(
+      buildTodayProgress({
+        habits: initialHabits,
+        habitLogs: initialHabitLogs,
+        todos: initialTodos,
+        date,
+      })
+    );
+  }, [date, initialHabitLogs, initialHabits, initialTodos]);
+
+  useEffect(() => {
+    let cancelled = false;
+    let timer: number | null = null;
+
+    const refresh = () => {
+      if (timer !== null) window.clearTimeout(timer);
+      timer = window.setTimeout(async () => {
+        const activeDate = getActiveDateString();
+        const supabase = createClient();
+        const [habitsRes, logsRes, todosRes] = await Promise.all([
+          supabase
+            .from("habits")
+            .select("*")
+            .eq("active", true)
+            .order("sort_order", { ascending: true }),
+          supabase.from("habit_logs").select("*").eq("date", activeDate),
+          supabase
+            .from("todo_goals")
+            .select("*")
+            .eq("date", activeDate)
+            .order("sort_order", { ascending: true }),
+        ]);
+
+        if (cancelled) return;
+        setGoals(
+          buildTodayProgress({
+            habits: (habitsRes.data ?? []) as Habit[],
+            habitLogs: (logsRes.data ?? []) as HabitLog[],
+            todos: (todosRes.data ?? []) as TodoGoal[],
+            date: activeDate,
+          })
+        );
+      }, 150);
+    };
+
+    window.addEventListener("goals-changed", refresh);
+    window.addEventListener("habits-changed", refresh);
+    return () => {
+      cancelled = true;
+      if (timer !== null) window.clearTimeout(timer);
       window.removeEventListener("goals-changed", refresh);
+      window.removeEventListener("habits-changed", refresh);
     };
   }, []);
 

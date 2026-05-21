@@ -32,11 +32,21 @@ export function DashboardHub({
     <div className="dash-hub">
       <DashboardTitle>My Dashboard</DashboardTitle>
       <div className="mb-4">
-        <GoalsTicker />
+        <GoalsTicker
+          initialHabits={habits}
+          initialHabitLogs={habitLogs}
+          initialTodos={todoToday}
+          date={todoActiveDate}
+        />
       </div>
 
       <div className="dash-main-grid">
-        <CommandCenter />
+        <CommandCenter
+          initialHabits={habits}
+          initialHabitLogs={habitLogs}
+          initialTodos={todoToday}
+          date={todoActiveDate}
+        />
         <MacroTimeGrid />
       </div>
 

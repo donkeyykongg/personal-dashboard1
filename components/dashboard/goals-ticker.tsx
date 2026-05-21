@@ -1,13 +1,17 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { getActiveDateString } from "@/lib/dates";
+import type { Habit, HabitLog, TodoGoal } from "@/lib/supabase/types";
+import { buildTodayProgress, type TodayProgress } from "./today-progress";
 import styles from "./goals-ticker.module.css";
 
-type Goal = {
-  text: string;
-  done?: boolean;
-  doneAt?: number;
-  queued?: boolean;
+type Props = {
+  initialHabits: Habit[];
+  initialHabitLogs: HabitLog[];
+  initialTodos: TodoGoal[];
+  date: string;
 };
 
 type TickerItem = {
@@ -18,41 +22,19 @@ type TickerItem = {
 const CYCLE_MS = 5000;
 const ANIM_MS = 460;
 
-function getActiveDateString(): string {
-  const now = new Date();
-  if (now.getHours() < 6) now.setDate(now.getDate() - 1);
-  const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, "0");
-  const d = String(now.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
-}
-
-function readGoals(): Goal[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(`goals:${getActiveDateString()}`);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-function buildItems(goals: Goal[]): {
+function buildItems(progress: TodayProgress): {
   items: TickerItem[];
   done: number;
   total: number;
 } {
-  const total = goals.length;
-  const done = goals.filter((g) => g.done).length;
+  const { done, total } = progress;
 
   if (total === 0) {
     return {
       items: [
         {
           status: "empty",
-          text: "No goals set for today — add one to get rolling.",
+          text: "No habits or todos set for today — add one to get rolling.",
         },
       ],
       done,
@@ -69,9 +51,12 @@ function buildItems(goals: Goal[]): {
   }
 
   return {
-    items: goals
-      .filter((g) => !g.done)
-      .map<TickerItem>((g) => ({ status: "pending", text: g.text })),
+    items: progress.items
+      .filter((item) => !item.done)
+      .map<TickerItem>((item) => ({
+        status: "pending",
+        text: `${item.kind === "habit" ? "Habit" : "Todo"}: ${item.text}`,
+      })),
     done,
     total,
   };
@@ -89,8 +74,20 @@ function statusClass(status: TickerItem["status"]): string {
   return styles.statusEmpty;
 }
 
-export function GoalsTicker() {
-  const [goals, setGoals] = useState<Goal[]>([]);
+export function GoalsTicker({
+  initialHabits,
+  initialHabitLogs,
+  initialTodos,
+  date,
+}: Props) {
+  const [progress, setProgress] = useState<TodayProgress>(() =>
+    buildTodayProgress({
+      habits: initialHabits,
+      habitLogs: initialHabitLogs,
+      todos: initialTodos,
+      date,
+    })
+  );
   const [current, setCurrent] = useState<TickerItem | null>(null);
   const [leaving, setLeaving] = useState<TickerItem | null>(null);
   const [didFirstShow, setDidFirstShow] = useState(false);
@@ -105,25 +102,64 @@ export function GoalsTicker() {
     currentRef.current = current;
   }, [current]);
 
-  // Sync goals with localStorage and listen for changes
   useEffect(() => {
-    const refresh = () => setGoals(readGoals());
-    refresh();
+    setProgress(
+      buildTodayProgress({
+        habits: initialHabits,
+        habitLogs: initialHabitLogs,
+        todos: initialTodos,
+        date,
+      })
+    );
+  }, [date, initialHabitLogs, initialHabits, initialTodos]);
 
-    const onStorage = (e: StorageEvent) => {
-      if (!e.key || e.key.startsWith("goals:")) refresh();
+  // Sync with Supabase-backed habits and todos.
+  useEffect(() => {
+    let cancelled = false;
+    let timer: number | null = null;
+
+    const refresh = () => {
+      if (timer !== null) window.clearTimeout(timer);
+      timer = window.setTimeout(async () => {
+        const activeDate = getActiveDateString();
+        const supabase = createClient();
+        const [habitsRes, logsRes, todosRes] = await Promise.all([
+          supabase
+            .from("habits")
+            .select("*")
+            .eq("active", true)
+            .order("sort_order", { ascending: true }),
+          supabase.from("habit_logs").select("*").eq("date", activeDate),
+          supabase
+            .from("todo_goals")
+            .select("*")
+            .eq("date", activeDate)
+            .order("sort_order", { ascending: true }),
+        ]);
+
+        if (cancelled) return;
+        setProgress(
+          buildTodayProgress({
+            habits: (habitsRes.data ?? []) as Habit[],
+            habitLogs: (logsRes.data ?? []) as HabitLog[],
+            todos: (todosRes.data ?? []) as TodoGoal[],
+            date: activeDate,
+          })
+        );
+      }, 150);
     };
-    const onChange = () => refresh();
 
-    window.addEventListener("storage", onStorage);
-    window.addEventListener("goals-changed", onChange as EventListener);
+    window.addEventListener("goals-changed", refresh);
+    window.addEventListener("habits-changed", refresh);
     return () => {
-      window.removeEventListener("storage", onStorage);
-      window.removeEventListener("goals-changed", onChange as EventListener);
+      cancelled = true;
+      if (timer !== null) window.clearTimeout(timer);
+      window.removeEventListener("goals-changed", refresh);
+      window.removeEventListener("habits-changed", refresh);
     };
   }, []);
 
-  const { items, done, total } = useMemo(() => buildItems(goals), [goals]);
+  const { items, done, total } = useMemo(() => buildItems(progress), [progress]);
 
   // Drive the rotation
   useEffect(() => {
