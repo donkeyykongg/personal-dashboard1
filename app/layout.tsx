@@ -4,6 +4,7 @@ import "./globals.css";
 import { BottomTabBar } from "@/components/layout/bottom-tab-bar";
 import { ThemeProvider } from "@/components/layout/theme-provider";
 import { CommandPalette } from "@/components/layout/command-palette";
+import { PomodoroSessionWatcher } from "@/components/pomodoro/pomodoro-session-watcher";
 
 const fontSans = Inter({
   subsets: ["latin"],
@@ -44,6 +45,7 @@ export default function RootLayout({
             <div className="mx-auto max-w-7xl px-6 py-10">{children}</div>
           </main>
           <CommandPalette />
+          <PomodoroSessionWatcher />
           <BottomTabBar />
         </ThemeProvider>
       </body>

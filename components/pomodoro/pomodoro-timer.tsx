@@ -4,6 +4,15 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Pause, Play, RotateCcw, Volume2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import {
+  clearActivePomodoroSession,
+  completeActivePomodoroSession,
+  readActivePomodoroSession,
+  requestPomodoroNotificationPermission,
+  ringPomodoroBell,
+  writeActivePomodoroSession,
+  type ActivePomodoroSession,
+} from "@/lib/pomodoro/session";
 import type { DailyTask } from "@/lib/supabase/types";
 import styles from "./focus-page.module.css";
 
@@ -70,36 +79,6 @@ function format(secs: number) {
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
-function ringBell() {
-  if (typeof window === "undefined") return;
-  const Ctx = window.AudioContext || (window as any).webkitAudioContext;
-  if (!Ctx) return;
-  const ctx = new Ctx();
-  const ring = (offset: number, frequency: number) => {
-    const osc = ctx.createOscillator();
-    const shimmer = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = "triangle";
-    shimmer.type = "sine";
-    osc.frequency.setValueAtTime(frequency, ctx.currentTime + offset);
-    shimmer.frequency.setValueAtTime(frequency * 2, ctx.currentTime + offset);
-    gain.gain.setValueAtTime(0.001, ctx.currentTime + offset);
-    gain.gain.exponentialRampToValueAtTime(0.18, ctx.currentTime + offset + 0.012);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + offset + 0.72);
-    osc.connect(gain);
-    shimmer.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start(ctx.currentTime + offset);
-    shimmer.start(ctx.currentTime + offset);
-    osc.stop(ctx.currentTime + offset + 0.78);
-    shimmer.stop(ctx.currentTime + offset + 0.78);
-  };
-  ring(0, 659.25);
-  ring(0.18, 783.99);
-  ring(0.36, 1046.5);
-  setTimeout(() => ctx.close(), 1600);
-}
-
 export function PomodoroTimer({
   initialMinutes,
   tasks,
@@ -124,11 +103,53 @@ export function PomodoroTimer({
   const [status, setStatus] = useState<string | null>(null);
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startedAtRef = useRef<Date | null>(null);
+  const activeSessionIdRef = useRef<string | null>(null);
+  const skipNextActiveWriteRef = useRef(false);
   const totalSeconds = minutes * 60;
   const progress = useMemo(
     () => (totalSeconds === 0 ? 0 : 1 - secondsLeft / totalSeconds),
     [secondsLeft, totalSeconds]
   );
+
+  function buildActiveSession(remaining: number): ActivePomodoroSession {
+    const now = new Date();
+    const startedAt = startedAtRef.current ?? now;
+    startedAtRef.current = startedAt;
+    const id =
+      activeSessionIdRef.current ??
+      (crypto.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`);
+    activeSessionIdRef.current = id;
+
+    return {
+      id,
+      startedAt: startedAt.toISOString(),
+      endAt: new Date(Date.now() + remaining * 1000).toISOString(),
+      plannedMinutes: minutes,
+      remainingSeconds: remaining,
+      activityLabel: activityLabel.trim() || activityCategory,
+      activityCategory: customCategory.trim() || activityCategory,
+      mode,
+      paused: false,
+    };
+  }
+
+  function persistRunningSession(remaining = secondsLeft) {
+    writeActivePomodoroSession(buildActiveSession(Math.max(1, remaining)));
+  }
+
+  function persistPausedSession(remaining = secondsLeft) {
+    const current = readActivePomodoroSession();
+    if (!current || current.id !== activeSessionIdRef.current) return;
+    writeActivePomodoroSession({
+      ...current,
+      endAt: new Date(Date.now() + Math.max(1, remaining) * 1000).toISOString(),
+      remainingSeconds: Math.max(1, remaining),
+      activityLabel: activityLabel.trim() || activityCategory,
+      activityCategory: customCategory.trim() || activityCategory,
+      mode,
+      paused: true,
+    });
+  }
 
   useEffect(() => {
     const refreshGoals = () => {
@@ -150,15 +171,79 @@ export function PomodoroTimer({
   }, []);
 
   useEffect(() => {
+    const session = readActivePomodoroSession();
+    if (!session || session.logStatus) return;
+
+    startedAtRef.current = new Date(session.startedAt);
+    activeSessionIdRef.current = session.id;
+    skipNextActiveWriteRef.current = true;
+    setMode(session.mode);
+    setMinutes(session.plannedMinutes);
+    if (session.mode === "focus") {
+      setFocusMinutes(session.plannedMinutes);
+      setFocusInput(String(session.plannedMinutes));
+    } else {
+      setBreakMinutes(session.plannedMinutes);
+      setBreakInput(String(session.plannedMinutes));
+    }
+    setActivityLabel(session.activityLabel);
+    setActivityCategory(session.activityCategory);
+
+    if (session.paused) {
+      setSecondsLeft(session.remainingSeconds);
+      setIsRunning(false);
+      return;
+    }
+
+    const remaining = Math.max(
+      0,
+      Math.ceil((new Date(session.endAt).getTime() - Date.now()) / 1000)
+    );
+    setSecondsLeft(remaining);
+    if (remaining > 0) {
+      setIsRunning(true);
+      return;
+    }
+
+    void completeActivePomodoroSession(session, { ring: true, notify: true }).then(
+      ({ logged, error }) => {
+        if (error) {
+          setStatus(error.message);
+          return;
+        }
+        if (logged) {
+          setStatus("Session logged.");
+          router.refresh();
+        }
+      }
+    );
+  }, [router]);
+
+  useEffect(() => {
     if (!isRunning) return;
     tickRef.current = setInterval(() => {
       setSecondsLeft((s) => {
         if (s <= 1) {
           if (tickRef.current) clearInterval(tickRef.current);
           setIsRunning(false);
-          ringBell();
-          void logSession(startedAtRef.current, minutes, true);
-          startedAtRef.current = null;
+          const session = readActivePomodoroSession();
+          if (session && session.id === activeSessionIdRef.current) {
+            void completeActivePomodoroSession(session, {
+              ring: true,
+              notify: true,
+            }).then(({ logged, error }) => {
+              if (error) {
+                setStatus(error.message);
+                return;
+              }
+              if (logged) {
+                setStatus("Session logged.");
+                router.refresh();
+              }
+              startedAtRef.current = null;
+              activeSessionIdRef.current = null;
+            });
+          }
           return 0;
         }
         return s - 1;
@@ -168,6 +253,22 @@ export function PomodoroTimer({
       if (tickRef.current) clearInterval(tickRef.current);
     };
   }, [isRunning]);
+
+  useEffect(() => {
+    if (skipNextActiveWriteRef.current) {
+      skipNextActiveWriteRef.current = false;
+      return;
+    }
+    const current = readActivePomodoroSession();
+    if (!current || current.id !== activeSessionIdRef.current) return;
+    writeActivePomodoroSession({
+      ...current,
+      plannedMinutes: minutes,
+      activityLabel: activityLabel.trim() || activityCategory,
+      activityCategory: customCategory.trim() || activityCategory,
+      mode,
+    });
+  }, [activityCategory, activityLabel, customCategory, minutes, mode]);
 
   function applyMinutes(m: number, nextMode = mode) {
     const clamped = Math.max(1, Math.min(180, Math.round(m)));
@@ -193,12 +294,18 @@ export function PomodoroTimer({
   }
 
   function toggleStart() {
-    if (secondsLeft === 0) setSecondsLeft(minutes * 60);
-    setIsRunning((r) => {
-      const next = !r;
-      if (next && !startedAtRef.current) startedAtRef.current = new Date();
-      return next;
-    });
+    const nextSeconds = secondsLeft === 0 ? minutes * 60 : secondsLeft;
+    if (secondsLeft === 0) setSecondsLeft(nextSeconds);
+
+    if (isRunning) {
+      persistPausedSession(nextSeconds);
+      setIsRunning(false);
+      return;
+    }
+
+    requestPomodoroNotificationPermission();
+    persistRunningSession(nextSeconds);
+    setIsRunning(true);
   }
 
   async function logSession(startedAt: Date | null, mins: number, completed: boolean) {
@@ -223,6 +330,7 @@ export function PomodoroTimer({
       setStatus(error.message);
       return;
     }
+    clearActivePomodoroSession(activeSessionIdRef.current ?? undefined);
     setStatus(completed ? "Session logged." : "Partial session logged.");
     router.refresh();
   }
@@ -230,9 +338,15 @@ export function PomodoroTimer({
   function reset() {
     setIsRunning(false);
     setSecondsLeft(minutes * 60);
+    clearActivePomodoroSession(activeSessionIdRef.current ?? undefined);
+    startedAtRef.current = null;
+    activeSessionIdRef.current = null;
   }
 
   function switchMode(nextMode: "focus" | "break") {
+    clearActivePomodoroSession(activeSessionIdRef.current ?? undefined);
+    startedAtRef.current = null;
+    activeSessionIdRef.current = null;
     setMode(nextMode);
     const nextMinutes = nextMode === "focus" ? focusMinutes : breakMinutes;
     setMinutes(nextMinutes);
@@ -282,6 +396,7 @@ export function PomodoroTimer({
     setIsRunning(false);
     void logSession(startedAtRef.current, minutes, false);
     startedAtRef.current = null;
+    activeSessionIdRef.current = null;
     setSecondsLeft(minutes * 60);
   }
 
@@ -398,7 +513,7 @@ export function PomodoroTimer({
         >
           Log now
         </button>
-        <button onClick={ringBell} className={`${styles.ghostButton} inline-flex h-12 w-12 items-center justify-center`} title="Test bell">
+        <button onClick={ringPomodoroBell} className={`${styles.ghostButton} inline-flex h-12 w-12 items-center justify-center`} title="Test bell">
           <Volume2 className="h-4 w-4" />
         </button>
       </div>
