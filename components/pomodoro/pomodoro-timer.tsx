@@ -7,9 +7,12 @@ import { createClient } from "@/lib/supabase/client";
 import {
   clearActivePomodoroSession,
   completeActivePomodoroSession,
+  POMODORO_EVENT,
   readActivePomodoroSession,
   requestPomodoroNotificationPermission,
+  remainingSecondsForSession,
   ringPomodoroBell,
+  unlockPomodoroAudio,
   writeActivePomodoroSession,
   type ActivePomodoroSession,
 } from "@/lib/pomodoro/session";
@@ -130,7 +133,27 @@ export function PomodoroTimer({
       activityCategory: customCategory.trim() || activityCategory,
       mode,
       paused: false,
+      autoRestart: true,
     };
+  }
+
+  function hydrateSession(session: ActivePomodoroSession) {
+    startedAtRef.current = new Date(session.startedAt);
+    activeSessionIdRef.current = session.id;
+    skipNextActiveWriteRef.current = true;
+    setMode(session.mode);
+    setMinutes(session.plannedMinutes);
+    if (session.mode === "focus") {
+      setFocusMinutes(session.plannedMinutes);
+      setFocusInput(String(session.plannedMinutes));
+    } else {
+      setBreakMinutes(session.plannedMinutes);
+      setBreakInput(String(session.plannedMinutes));
+    }
+    setActivityLabel(session.activityLabel);
+    setActivityCategory(session.activityCategory);
+    setSecondsLeft(session.paused ? session.remainingSeconds : remainingSecondsForSession(session));
+    setIsRunning(!session.paused);
   }
 
   function persistRunningSession(remaining = secondsLeft) {
@@ -148,6 +171,7 @@ export function PomodoroTimer({
       activityCategory: customCategory.trim() || activityCategory,
       mode,
       paused: true,
+      autoRestart: true,
     });
   }
 
@@ -174,85 +198,86 @@ export function PomodoroTimer({
     const session = readActivePomodoroSession();
     if (!session || session.logStatus) return;
 
-    startedAtRef.current = new Date(session.startedAt);
-    activeSessionIdRef.current = session.id;
-    skipNextActiveWriteRef.current = true;
-    setMode(session.mode);
-    setMinutes(session.plannedMinutes);
-    if (session.mode === "focus") {
-      setFocusMinutes(session.plannedMinutes);
-      setFocusInput(String(session.plannedMinutes));
-    } else {
-      setBreakMinutes(session.plannedMinutes);
-      setBreakInput(String(session.plannedMinutes));
-    }
-    setActivityLabel(session.activityLabel);
-    setActivityCategory(session.activityCategory);
+    hydrateSession(session);
 
     if (session.paused) {
-      setSecondsLeft(session.remainingSeconds);
-      setIsRunning(false);
       return;
     }
 
-    const remaining = Math.max(
-      0,
-      Math.ceil((new Date(session.endAt).getTime() - Date.now()) / 1000)
-    );
-    setSecondsLeft(remaining);
+    const remaining = remainingSecondsForSession(session);
     if (remaining > 0) {
-      setIsRunning(true);
       return;
     }
 
-    void completeActivePomodoroSession(session, { ring: true, notify: true }).then(
-      ({ logged, error }) => {
+    void completeActivePomodoroSession(session, {
+      ring: true,
+      notify: true,
+      restart: true,
+    }).then(({ logged, error, nextSession }) => {
         if (error) {
           setStatus(error.message);
           return;
         }
         if (logged) {
-          setStatus("Session logged.");
+          if (nextSession) hydrateSession(nextSession);
+          setStatus("Session logged. Next session started.");
           router.refresh();
         }
-      }
-    );
+      });
   }, [router]);
 
   useEffect(() => {
+    const syncActiveSession = () => {
+      const session = readActivePomodoroSession();
+      if (!session || session.logStatus || session.id === activeSessionIdRef.current) return;
+      hydrateSession(session);
+    };
+
+    window.addEventListener(POMODORO_EVENT, syncActiveSession);
+    window.addEventListener("storage", syncActiveSession);
+    return () => {
+      window.removeEventListener(POMODORO_EVENT, syncActiveSession);
+      window.removeEventListener("storage", syncActiveSession);
+    };
+  }, []);
+
+  useEffect(() => {
     if (!isRunning) return;
-    tickRef.current = setInterval(() => {
-      setSecondsLeft((s) => {
-        if (s <= 1) {
-          if (tickRef.current) clearInterval(tickRef.current);
-          setIsRunning(false);
-          const session = readActivePomodoroSession();
-          if (session && session.id === activeSessionIdRef.current) {
-            void completeActivePomodoroSession(session, {
-              ring: true,
-              notify: true,
-            }).then(({ logged, error }) => {
-              if (error) {
-                setStatus(error.message);
-                return;
-              }
-              if (logged) {
-                setStatus("Session logged.");
-                router.refresh();
-              }
-              startedAtRef.current = null;
-              activeSessionIdRef.current = null;
-            });
-          }
-          return 0;
-        }
-        return s - 1;
+
+    const reconcile = async () => {
+      const session = readActivePomodoroSession();
+      if (!session || session.paused || session.logStatus) {
+        setIsRunning(false);
+        return;
+      }
+
+      activeSessionIdRef.current = session.id;
+      const remaining = remainingSecondsForSession(session);
+      setSecondsLeft(remaining);
+      if (remaining > 0) return;
+
+      const { logged, error, nextSession } = await completeActivePomodoroSession(session, {
+        ring: true,
+        notify: true,
+        restart: true,
       });
-    }, 1000);
+      if (error) {
+        setStatus(error.message);
+        return;
+      }
+      if (logged && nextSession) {
+        hydrateSession(nextSession);
+        setStatus("Session logged. Next session started.");
+        router.refresh();
+      }
+    };
+
+    void reconcile();
+    tickRef.current = setInterval(() => void reconcile(), 1000);
     return () => {
       if (tickRef.current) clearInterval(tickRef.current);
     };
-  }, [isRunning]);
+  }, [isRunning, router]);
 
   useEffect(() => {
     if (skipNextActiveWriteRef.current) {
@@ -293,7 +318,7 @@ export function PomodoroTimer({
       .upsert({ id: 1, last_pomodoro_minutes: m, updated_at: new Date().toISOString() });
   }
 
-  function toggleStart() {
+  async function toggleStart() {
     const nextSeconds = secondsLeft === 0 ? minutes * 60 : secondsLeft;
     if (secondsLeft === 0) setSecondsLeft(nextSeconds);
 
@@ -304,6 +329,7 @@ export function PomodoroTimer({
     }
 
     requestPomodoroNotificationPermission();
+    await unlockPomodoroAudio();
     persistRunningSession(nextSeconds);
     setIsRunning(true);
   }

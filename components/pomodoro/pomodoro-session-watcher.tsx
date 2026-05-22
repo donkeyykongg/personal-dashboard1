@@ -6,6 +6,7 @@ import {
   completeActivePomodoroSession,
   POMODORO_EVENT,
   readActivePomodoroSession,
+  remainingSecondsForSession,
 } from "@/lib/pomodoro/session";
 
 export function PomodoroSessionWatcher() {
@@ -15,22 +16,30 @@ export function PomodoroSessionWatcher() {
     let interval: ReturnType<typeof setInterval> | null = null;
     let completing = false;
 
-    const reconcile = () => {
-      const session = readActivePomodoroSession();
+    const reconcile = async () => {
+      let session = readActivePomodoroSession();
       if (!session || session.paused || session.logStatus || completing) return;
-      if (Date.now() < new Date(session.endAt).getTime()) return;
+      if (remainingSecondsForSession(session) > 0) return;
 
       completing = true;
-      void completeActivePomodoroSession(session, { ring: true, notify: true }).then(
-        ({ logged }) => {
-          completing = false;
-          if (logged) router.refresh();
-        }
-      );
+      let loggedAny = false;
+      for (let i = 0; i < 48; i += 1) {
+        if (!session || session.paused || remainingSecondsForSession(session) > 0) break;
+        const { logged, nextSession } = await completeActivePomodoroSession(session, {
+          ring: i === 0,
+          notify: i === 0,
+          restart: true,
+        });
+        if (!logged) break;
+        loggedAny = true;
+        session = nextSession ?? readActivePomodoroSession();
+      }
+      completing = false;
+      if (loggedAny) router.refresh();
     };
 
-    reconcile();
-    interval = setInterval(reconcile, 1000);
+    void reconcile();
+    interval = setInterval(() => void reconcile(), 1000);
     window.addEventListener(POMODORO_EVENT, reconcile);
     window.addEventListener("focus", reconcile);
     window.addEventListener("visibilitychange", reconcile);

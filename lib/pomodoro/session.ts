@@ -15,6 +15,7 @@ export type ActivePomodoroSession = {
   activityCategory: string;
   mode: "focus" | "break";
   paused: boolean;
+  autoRestart?: boolean;
   logStatus?: "logging" | "logged";
 };
 
@@ -44,11 +45,56 @@ export function clearActivePomodoroSession(id?: string) {
   emitPomodoroChange();
 }
 
+function makeSessionId() {
+  return crypto.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function nextSessionFrom(session: ActivePomodoroSession) {
+  const durationMs = session.plannedMinutes * 60 * 1000;
+  const startedAt = new Date(session.endAt);
+  const endAt = new Date(startedAt.getTime() + durationMs);
+
+  return {
+    ...session,
+    id: makeSessionId(),
+    startedAt: startedAt.toISOString(),
+    endAt: endAt.toISOString(),
+    remainingSeconds: session.plannedMinutes * 60,
+    paused: false,
+    logStatus: undefined,
+  };
+}
+
+export function remainingSecondsForSession(session: ActivePomodoroSession) {
+  return Math.max(0, Math.ceil((new Date(session.endAt).getTime() - Date.now()) / 1000));
+}
+
+export async function unlockPomodoroAudio() {
+  if (typeof window === "undefined") return;
+  const Ctx = window.AudioContext || (window as any).webkitAudioContext;
+  if (!Ctx) return;
+  const win = window as typeof window & { __pomodoroAudioContext?: AudioContext };
+  const ctx = win.__pomodoroAudioContext ?? new Ctx();
+  win.__pomodoroAudioContext = ctx;
+  if (ctx.state === "suspended") await ctx.resume();
+
+  const gain = ctx.createGain();
+  const osc = ctx.createOscillator();
+  gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start();
+  osc.stop(ctx.currentTime + 0.02);
+}
+
 export function ringPomodoroBell() {
   if (typeof window === "undefined") return;
   const Ctx = window.AudioContext || (window as any).webkitAudioContext;
   if (!Ctx) return;
-  const ctx = new Ctx();
+  const win = window as typeof window & { __pomodoroAudioContext?: AudioContext };
+  const ctx = win.__pomodoroAudioContext ?? new Ctx();
+  win.__pomodoroAudioContext = ctx;
+  if (ctx.state === "suspended") void ctx.resume();
   const ring = (offset: number, frequency: number) => {
     const osc = ctx.createOscillator();
     const shimmer = ctx.createOscillator();
@@ -68,10 +114,12 @@ export function ringPomodoroBell() {
     osc.stop(ctx.currentTime + offset + 0.78);
     shimmer.stop(ctx.currentTime + offset + 0.78);
   };
-  ring(0, 659.25);
-  ring(0.18, 783.99);
-  ring(0.36, 1046.5);
-  setTimeout(() => void ctx.close(), 1600);
+  for (let i = 0; i < 4; i += 1) {
+    const offset = i * 1.35;
+    ring(offset, 659.25);
+    ring(offset + 0.18, 783.99);
+    ring(offset + 0.36, 1046.5);
+  }
 }
 
 export function requestPomodoroNotificationPermission() {
@@ -89,12 +137,12 @@ export function notifyPomodoroComplete(session: ActivePomodoroSession) {
     session.mode === "break"
       ? "Time to come back in."
       : `${session.plannedMinutes} minutes logged automatically.`;
-  new Notification(title, { body });
+  new Notification(title, { body, requireInteraction: true, silent: false });
 }
 
 export async function completeActivePomodoroSession(
   session: ActivePomodoroSession,
-  options: { ring?: boolean; notify?: boolean } = {}
+  options: { ring?: boolean; notify?: boolean; restart?: boolean } = {}
 ) {
   const current = readActivePomodoroSession();
   if (!current || current.id !== session.id || current.logStatus === "logged") {
@@ -107,7 +155,7 @@ export async function completeActivePomodoroSession(
   writeActivePomodoroSession({ ...current, logStatus: "logging" });
 
   const supabase = createClient();
-  const endedAt = new Date().toISOString();
+  const endedAt = current.endAt;
   const minutes = current.plannedMinutes;
   const { error } = await supabase.from("pomodoro_sessions").insert({
     started_at: current.startedAt,
@@ -128,7 +176,14 @@ export async function completeActivePomodoroSession(
 
   if (options.ring) ringPomodoroBell();
   if (options.notify) notifyPomodoroComplete(current);
-  clearActivePomodoroSession(current.id);
+  const nextSession =
+    options.restart && current.autoRestart !== false ? nextSessionFrom(current) : null;
+
+  if (nextSession) {
+    writeActivePomodoroSession(nextSession);
+  } else {
+    clearActivePomodoroSession(current.id);
+  }
   window.dispatchEvent(new Event("pomodoro-session-logged"));
-  return { logged: true, error: null };
+  return { logged: true, error: null, nextSession };
 }
