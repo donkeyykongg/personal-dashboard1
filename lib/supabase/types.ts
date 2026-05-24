@@ -16,6 +16,7 @@ export type FinanceEntry = {
 
 export type DailyTask = {
   id: string;
+  user_id: string;
   day_offset: number;
   task: string;
   tone: string;
@@ -32,6 +33,7 @@ export type JournalPrompt = {
 
 export type UserSettings = {
   id: number;
+  user_id: string;
   last_pomodoro_minutes: number;
   updated_at: string;
 };
@@ -51,6 +53,7 @@ export type ScheduleEvent = {
 
 export type PomodoroSession = {
   id: string;
+  user_id: string;
   started_at: string;
   ended_at: string;
   minutes: number;
@@ -80,6 +83,7 @@ export type KanbanCard = {
 
 export type InboxItem = {
   id: string;
+  user_id: string;
   content: string;
   destination: string | null;
   archived: boolean;
@@ -151,6 +155,7 @@ export type ScheduledPost = {
 
 export type Reflection = {
   id: string;
+  user_id: string;
   date: string;
   score: number;
   content: string;
@@ -159,6 +164,7 @@ export type Reflection = {
 
 export type MonthlyCashFlow = {
   id: string;
+  user_id: string;
   month: string;
   revenue: number;
   expenses: number;
@@ -172,6 +178,7 @@ export type NwCategory = "bank" | "stocks" | "debt" | "other";
 
 export type FinancialAccount = {
   id: string;
+  user_id: string;
   name: string;
   kind: FinancialAccountKind;
   amount: number;
@@ -195,6 +202,7 @@ export type NwActivityKind = "add" | "edit" | "delete";
 
 export type NwActivity = {
   id: string;
+  user_id: string;
   account_id: string | null;
   account_name: string;
   nw_category: NwCategory;
@@ -205,12 +213,14 @@ export type NwActivity = {
 
 export type NwSnapshot = {
   id: string;
+  user_id: string;
   total_chf: number;
   captured_at: string;
 };
 
 export type Habit = {
   id: string;
+  user_id: string;
   name: string;
   category: string | null;
   parent_id: string | null;
@@ -221,6 +231,7 @@ export type Habit = {
 
 export type HabitLog = {
   id: string;
+  user_id: string;
   habit_id: string;
   date: string;
   completed: boolean;
@@ -229,6 +240,7 @@ export type HabitLog = {
 
 export type JournalEntry = {
   id: string;
+  user_id: string;
   content: string;
   source: "app" | "telegram";
   created_at: string;
@@ -239,6 +251,7 @@ export type JournalSummaryPeriod = "day" | "week" | "month";
 
 export type JournalSummary = {
   id: string;
+  user_id: string;
   period: JournalSummaryPeriod;
   period_start: string;
   summary: string;
@@ -248,6 +261,7 @@ export type JournalSummary = {
 
 export type BrainPage = {
   id: string;
+  user_id?: string;
   parent_id: string | null;
   title: string;
   icon: string | null;
@@ -268,6 +282,7 @@ export type BrainBriefing = {
 
 export type TodoGoal = {
   id: string;
+  user_id: string;
   date: string;
   text: string;
   done: boolean;
@@ -280,6 +295,7 @@ export type TodoGoal = {
 
 export type TodoStreak = {
   id: number;
+  user_id: string;
   count: number;
   last_processed_date: string | null;
   updated_at: string;

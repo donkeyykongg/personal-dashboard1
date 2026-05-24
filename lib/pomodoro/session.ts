@@ -19,29 +19,36 @@ export type ActivePomodoroSession = {
   logStatus?: "logging" | "logged";
 };
 
+function storageKey(userId?: string) {
+  return userId ? `${ACTIVE_POMODORO_KEY}:${userId}` : ACTIVE_POMODORO_KEY;
+}
+
 function emitPomodoroChange() {
   window.dispatchEvent(new Event(POMODORO_EVENT));
 }
 
-export function readActivePomodoroSession() {
+export function readActivePomodoroSession(userId?: string) {
   if (typeof window === "undefined") return null;
   try {
-    const raw = localStorage.getItem(ACTIVE_POMODORO_KEY);
+    const raw =
+      localStorage.getItem(storageKey(userId)) ??
+      (userId ? localStorage.getItem(ACTIVE_POMODORO_KEY) : null);
     return raw ? (JSON.parse(raw) as ActivePomodoroSession) : null;
   } catch {
     return null;
   }
 }
 
-export function writeActivePomodoroSession(session: ActivePomodoroSession) {
-  localStorage.setItem(ACTIVE_POMODORO_KEY, JSON.stringify(session));
+export function writeActivePomodoroSession(session: ActivePomodoroSession, userId?: string) {
+  localStorage.setItem(storageKey(userId), JSON.stringify(session));
   emitPomodoroChange();
 }
 
-export function clearActivePomodoroSession(id?: string) {
-  const current = readActivePomodoroSession();
+export function clearActivePomodoroSession(id?: string, userId?: string) {
+  const current = readActivePomodoroSession(userId);
   if (id && current?.id !== id) return;
-  localStorage.removeItem(ACTIVE_POMODORO_KEY);
+  localStorage.removeItem(storageKey(userId));
+  if (userId) localStorage.removeItem(ACTIVE_POMODORO_KEY);
   emitPomodoroChange();
 }
 
@@ -142,9 +149,9 @@ export function notifyPomodoroComplete(session: ActivePomodoroSession) {
 
 export async function completeActivePomodoroSession(
   session: ActivePomodoroSession,
-  options: { ring?: boolean; notify?: boolean; restart?: boolean } = {}
+  options: { ring?: boolean; notify?: boolean; restart?: boolean; userId?: string } = {}
 ) {
-  const current = readActivePomodoroSession();
+  const current = readActivePomodoroSession(options.userId);
   if (!current || current.id !== session.id || current.logStatus === "logged") {
     return { logged: false, error: null };
   }
@@ -152,7 +159,7 @@ export async function completeActivePomodoroSession(
     return { logged: false, error: null };
   }
 
-  writeActivePomodoroSession({ ...current, logStatus: "logging" });
+  writeActivePomodoroSession({ ...current, logStatus: "logging" }, options.userId);
 
   const supabase = createClient();
   const endedAt = current.endAt;
@@ -170,7 +177,7 @@ export async function completeActivePomodoroSession(
   });
 
   if (error) {
-    writeActivePomodoroSession({ ...current, logStatus: undefined });
+    writeActivePomodoroSession({ ...current, logStatus: undefined }, options.userId);
     return { logged: false, error };
   }
 
@@ -180,9 +187,9 @@ export async function completeActivePomodoroSession(
     options.restart && current.autoRestart !== false ? nextSessionFrom(current) : null;
 
   if (nextSession) {
-    writeActivePomodoroSession(nextSession);
+    writeActivePomodoroSession(nextSession, options.userId);
   } else {
-    clearActivePomodoroSession(current.id);
+    clearActivePomodoroSession(current.id, options.userId);
   }
   window.dispatchEvent(new Event("pomodoro-session-logged"));
   return { logged: true, error: null, nextSession };

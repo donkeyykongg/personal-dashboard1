@@ -7,11 +7,14 @@ export const dynamic = "force-dynamic";
 
 export default async function PomodoroPage() {
   const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   const since = new Date();
   since.setMonth(since.getMonth() - 3);
 
   const [settingsRes, sessionsRes, tasksRes] = await Promise.all([
-    supabase.from("user_settings").select("*").eq("id", 1).maybeSingle(),
+    supabase.from("user_settings").select("*").eq("user_id", user?.id).maybeSingle(),
     supabase
       .from("pomodoro_sessions")
       .select("*")
@@ -34,7 +37,7 @@ export default async function PomodoroPage() {
       <header>
         <h1 className="text-2xl font-semibold tracking-tight text-white">Focus</h1>
       </header>
-      <PomodoroTimer initialMinutes={initialMinutes} tasks={tasks} />
+      <PomodoroTimer initialMinutes={initialMinutes} tasks={tasks} userId={user?.id ?? ""} />
       <PomodoroHistory sessions={sessions} />
     </div>
   );

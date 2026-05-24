@@ -43,6 +43,9 @@ export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const since120 = new Date();
   since120.setDate(since120.getDate() - 120);
@@ -103,7 +106,7 @@ export default async function DashboardPage() {
       .select("*")
       .eq("date", todoTomorrowDate)
       .order("sort_order", { ascending: true }),
-    supabase.from("todo_streak").select("*").eq("id", 1).maybeSingle(),
+    supabase.from("todo_streak").select("*").eq("user_id", user?.id).maybeSingle(),
   ]);
 
   const tasks = (tasksRes.data ?? []) as DailyTask[];

@@ -567,6 +567,9 @@ async function rolloverAndStreak(
   const streak: TodoStreak | null = (streakRow as TodoStreak | null) ?? null;
   let count = streak?.count ?? 0;
   const lastProcessed = streak?.last_processed_date ?? null;
+  if (!streak) {
+    await supabase.from("todo_streak").insert({ id: 1, count: 0 });
+  }
 
   const { data: oldRows } = await supabase
     .from("todo_goals")

@@ -180,7 +180,7 @@ function CashFlowDialog({
       const payload = { month, revenue: r, expenses: ex, notes: notes.trim() || null };
       const { error: dbError } = initial
         ? await supabase.from("monthly_cash_flow").update(payload).eq("id", initial.id)
-        : await supabase.from("monthly_cash_flow").upsert(payload, { onConflict: "month" });
+        : await supabase.from("monthly_cash_flow").upsert(payload, { onConflict: "user_id,month" });
       if (dbError) {
         setError(dbError.message);
         return;

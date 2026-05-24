@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   CartesianGrid,
   Cell,
@@ -24,8 +25,18 @@ function dayKey(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
+function localDayKey(iso: string) {
+  return dayKey(new Date(iso));
+}
+
 function sessionMinutes(session: PomodoroSession) {
   return Number(session.minutes) || 0;
+}
+
+function formatDuration(minutes: number, unit: "minutes" | "hours") {
+  if (unit === "minutes") return `${minutes}m`;
+  const hours = minutes / 60;
+  return `${Number.isInteger(hours) ? hours : hours.toFixed(1)}h`;
 }
 
 function fmtTime(iso: string) {
@@ -68,7 +79,7 @@ function currentMonthWeeks(sessions: PomodoroSession[]) {
   sessions
     .filter((s) => s.completed && (s.mode ?? "focus") === "focus")
     .forEach((s) => {
-      const key = s.started_at.slice(0, 10);
+      const key = localDayKey(s.started_at);
       minutes.set(key, (minutes.get(key) ?? 0) + sessionMinutes(s));
     });
 
@@ -112,9 +123,10 @@ function AllocationEmptyRing() {
 }
 
 export function PomodoroHistory({ sessions }: Props) {
+  const [durationUnit, setDurationUnit] = useState<"minutes" | "hours">("minutes");
   const completed = sessions.filter((s) => s.completed);
   const today = dayKey(new Date());
-  const todaySessions = completed.filter((s) => s.started_at.slice(0, 10) === today);
+  const todaySessions = completed.filter((s) => localDayKey(s.started_at) === today);
   const focusSessionsToday = todaySessions.filter((s) => (s.mode ?? "focus") === "focus");
   const focusToday = focusSessionsToday.reduce((sum, s) => sum + sessionMinutes(s), 0);
   const breakToday = todaySessions
@@ -135,9 +147,11 @@ export function PomodoroHistory({ sessions }: Props) {
     year: "numeric",
   });
   let streak = 0;
+  let skippedOpenToday = false;
   for (let i = monthDays.length - 1; i >= 0; i--) {
     if (monthDays[i].date > new Date()) continue;
     if (monthDays[i].minutes > 0) streak += 1;
+    else if (monthDays[i].key === today && !skippedOpenToday) skippedOpenToday = true;
     else break;
   }
 
@@ -160,14 +174,30 @@ export function PomodoroHistory({ sessions }: Props) {
   const visibleHours = hourly.slice(6, 23);
 
   const stats = [
-    ["Focused today", `${focusToday}m`, `${focusSessionsToday.length} focus sessions`],
-    ["Breaks", `${breakToday}m`, "recovery"],
-    ["Last 7 days", `${weekMinutes}m`, "total focus"],
+    ["Focused today", formatDuration(focusToday, durationUnit), `${focusSessionsToday.length} focus sessions`],
+    ["Breaks", formatDuration(breakToday, durationUnit), "recovery"],
+    ["Last 7 days", formatDuration(weekMinutes, durationUnit), "total focus"],
     ["Streak", `${streak}d`, "current month"],
   ];
 
   return (
     <section className="space-y-4">
+      <div className="flex justify-end">
+        <div className="inline-flex rounded-lg border border-white/10 bg-white/[0.03] p-1">
+          {(["minutes", "hours"] as const).map((unit) => (
+            <button
+              key={unit}
+              type="button"
+              onClick={() => setDurationUnit(unit)}
+              className={`rounded-md px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] transition ${
+                durationUnit === unit ? "bg-white/10 text-white" : "text-[#B8B6B0] hover:text-white"
+              }`}
+            >
+              {unit}
+            </button>
+          ))}
+        </div>
+      </div>
       <div className="grid gap-3 md:grid-cols-4">
         {stats.map(([label, value, hint]) => (
           <div key={label} className={`${styles.panel} p-4`}>
@@ -237,7 +267,9 @@ export function PomodoroHistory({ sessions }: Props) {
               <p className={styles.eyebrow}>Today&apos;s allocation</p>
               <h2 className="mt-1 text-xl font-semibold">Where focus went</h2>
             </div>
-            <p className="font-mono text-[11px] text-[#B8B6B0]">{focusToday} min</p>
+            <p className="font-mono text-[11px] text-[#B8B6B0]">
+              {formatDuration(focusToday, durationUnit)}
+            </p>
           </div>
 
           <div className="grid gap-4 md:grid-cols-[1fr_0.9fr]">
@@ -261,7 +293,7 @@ export function PomodoroHistory({ sessions }: Props) {
                         ))}
                       </Pie>
                       <Tooltip
-                        formatter={(value: number, name: string) => [`${value} min`, name]}
+                        formatter={(value: number, name: string) => [formatDuration(value, durationUnit), name]}
                         contentStyle={{
                           borderRadius: 8,
                           border: "1px solid rgba(255,255,255,0.10)",
@@ -300,7 +332,9 @@ export function PomodoroHistory({ sessions }: Props) {
                       />
                       <span className="truncate">{item.name}</span>
                     </span>
-                    <span className="font-mono text-[#B8B6B0]">{item.value}m</span>
+                    <span className="font-mono text-[#B8B6B0]">
+                      {formatDuration(item.value, durationUnit)}
+                    </span>
                   </div>
                 ))
               )}
@@ -321,9 +355,12 @@ export function PomodoroHistory({ sessions }: Props) {
               <LineChart data={visibleHours} margin={{ top: 12, right: 24, bottom: 8, left: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
                 <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#FAFAFA" }} />
-                <YAxis tick={{ fontSize: 11, fill: "#FAFAFA" }} tickFormatter={(v) => `${v}m`} />
+                <YAxis
+                  tick={{ fontSize: 11, fill: "#FAFAFA" }}
+                  tickFormatter={(v) => formatDuration(Number(v), durationUnit)}
+                />
                 <Tooltip
-                  formatter={(value: number) => [`${value} min`, "Focus"]}
+                  formatter={(value: number) => [formatDuration(value, durationUnit), "Focus"]}
                   contentStyle={{
                     borderRadius: 8,
                     border: "1px solid rgba(255,255,255,0.10)",
@@ -377,7 +414,7 @@ export function PomodoroHistory({ sessions }: Props) {
                   </p>
                 </div>
                 <span className="font-mono text-sm font-bold text-[var(--rowan-accent)]">
-                  {sessionMinutes(session)}m
+                  {formatDuration(sessionMinutes(session), durationUnit)}
                 </span>
                 <span className="font-mono text-[11px] text-[#B8B6B0]">
                   {fmtTime(session.started_at)}

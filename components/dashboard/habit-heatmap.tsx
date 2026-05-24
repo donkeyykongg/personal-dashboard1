@@ -11,6 +11,10 @@ function dayKey(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
+function localDayKey(iso: string) {
+  return dayKey(new Date(iso));
+}
+
 export function HabitHeatmap({ sessions, reflections, habitLogs = [], weeks = 16 }: Props) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -25,7 +29,7 @@ export function HabitHeatmap({ sessions, reflections, habitLogs = [], weeks = 16
   const counts = new Map<string, number>();
   sessions.forEach((s) => {
     if (!s.completed) return;
-    const k = s.started_at.slice(0, 10);
+    const k = localDayKey(s.started_at);
     counts.set(k, (counts.get(k) ?? 0) + 1);
   });
   reflections.forEach((r) => {
