@@ -5,6 +5,8 @@ import { BottomTabBar } from "@/components/layout/bottom-tab-bar";
 import { ThemeProvider } from "@/components/layout/theme-provider";
 import { CommandPalette } from "@/components/layout/command-palette";
 import { PomodoroSessionWatcher } from "@/components/pomodoro/pomodoro-session-watcher";
+import { createClient } from "@/lib/supabase/server";
+import { ensureUserDefaults } from "@/lib/user-defaults";
 
 const fontSans = Inter({
   subsets: ["latin"],
@@ -25,11 +27,14 @@ export const metadata: Metadata = {
 
 const themeFlashScript = `(function(){try{var t=localStorage.getItem('theme');if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}if(t==='dark'){document.documentElement.classList.add('dark');}else{document.documentElement.classList.add('light');}}catch(e){}})();`;
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const supabase = createClient();
+  await ensureUserDefaults(supabase);
+
   return (
     <html
       lang="en"
