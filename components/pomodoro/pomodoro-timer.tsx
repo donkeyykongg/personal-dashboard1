@@ -2,16 +2,17 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Pause, Play, RotateCcw, Volume2 } from "lucide-react";
+import { Pause, Play, RotateCcw, Volume2, VolumeX } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import {
   clearActivePomodoroSession,
   completeActivePomodoroSession,
+  isPomodoroAlarmMuted,
   POMODORO_EVENT,
   readActivePomodoroSession,
   requestPomodoroNotificationPermission,
   remainingSecondsForSession,
-  ringPomodoroBell,
+  setPomodoroAlarmMuted,
   unlockPomodoroAudio,
   writeActivePomodoroSession,
   type ActivePomodoroSession,
@@ -106,6 +107,7 @@ export function PomodoroTimer({
   const [selectedWorkId, setSelectedWorkId] = useState("");
   const [localGoals, setLocalGoals] = useState<Record<number, LocalGoal[]>>({});
   const [status, setStatus] = useState<string | null>(null);
+  const [alarmMuted, setAlarmMuted] = useState(false);
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startedAtRef = useRef<Date | null>(null);
   const activeSessionIdRef = useRef<string | null>(null);
@@ -176,6 +178,10 @@ export function PomodoroTimer({
       autoRestart: true,
     }, userId);
   }
+
+  useEffect(() => {
+    setAlarmMuted(isPomodoroAlarmMuted());
+  }, []);
 
   useEffect(() => {
     const refreshGoals = () => {
@@ -433,6 +439,13 @@ export function PomodoroTimer({
     setSecondsLeft(minutes * 60);
   }
 
+  function toggleAlarmMuted() {
+    const next = !alarmMuted;
+    setAlarmMuted(next);
+    setPomodoroAlarmMuted(next);
+    setStatus(next ? "Alarm muted." : "Alarm sound on.");
+  }
+
   const workItems = useMemo<WorkItem[]>(() => {
     const localItems = Object.entries(localGoals).flatMap(([offsetKey, goals]) => {
       const offset = Number(offsetKey);
@@ -546,8 +559,18 @@ export function PomodoroTimer({
         >
           Log now
         </button>
-        <button onClick={ringPomodoroBell} className={`${styles.ghostButton} inline-flex h-12 w-12 items-center justify-center`} title="Test bell">
-          <Volume2 className="h-4 w-4" />
+        <button
+          onClick={toggleAlarmMuted}
+          className={`${styles.ghostButton} inline-flex h-12 items-center justify-center px-4`}
+          title={alarmMuted ? "Unmute alarm" : "Mute alarm"}
+          aria-pressed={alarmMuted}
+        >
+          {alarmMuted ? (
+            <VolumeX className="mr-2 h-4 w-4" />
+          ) : (
+            <Volume2 className="mr-2 h-4 w-4" />
+          )}
+          {alarmMuted ? "Muted" : "Alarm"}
         </button>
       </div>
       {status && <p className="mt-4 text-center text-sm text-[#B8B6B0]">{status}</p>}

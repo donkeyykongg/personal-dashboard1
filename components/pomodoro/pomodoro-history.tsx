@@ -13,13 +13,13 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { MonthlyActivityHeatmap } from "@/components/activity/monthly-activity-heatmap";
 import type { PomodoroSession } from "@/lib/supabase/types";
 import styles from "./focus-page.module.css";
 
 type Props = { sessions: PomodoroSession[] };
 
 const COLORS = ["var(--rowan-accent, #6BE3A4)", "#7DD3FC", "#F2C063", "#B794F4", "#FF8A8A", "#14B8A6"];
-const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 function dayKey(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -44,61 +44,6 @@ function fmtTime(iso: string) {
     hour: "numeric",
     minute: "2-digit",
   });
-}
-
-function heatLevel(minutes: number) {
-  if (minutes <= 0) return styles.level0;
-  if (minutes < 30) return styles.level1;
-  if (minutes < 60) return styles.level2;
-  if (minutes < 120) return styles.level3;
-  return styles.level4;
-}
-
-type HeatDay = {
-  key: string;
-  date: Date;
-  minutes: number;
-  inMonth: boolean;
-};
-
-function shortDate(date: Date) {
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-}
-
-function currentMonthWeeks(sessions: PomodoroSession[]) {
-  const now = new Date();
-  const first = new Date(now.getFullYear(), now.getMonth(), 1);
-  const last = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-  const start = new Date(first);
-  start.setDate(first.getDate() - ((first.getDay() + 6) % 7));
-  const end = new Date(last);
-  end.setDate(last.getDate() + (6 - ((last.getDay() + 6) % 7)));
-
-  const minutes = new Map<string, number>();
-
-  sessions
-    .filter((s) => s.completed && (s.mode ?? "focus") === "focus")
-    .forEach((s) => {
-      const key = localDayKey(s.started_at);
-      minutes.set(key, (minutes.get(key) ?? 0) + sessionMinutes(s));
-    });
-
-  const weeks: HeatDay[][] = [];
-  let week: HeatDay[] = [];
-  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-    const key = dayKey(d);
-    week.push({
-      key,
-      date: new Date(d),
-      minutes: minutes.get(key) ?? 0,
-      inMonth: d.getMonth() === now.getMonth(),
-    });
-    if (week.length === 7) {
-      weeks.push(week);
-      week = [];
-    }
-  }
-  return weeks;
 }
 
 function AllocationEmptyRing() {
@@ -133,25 +78,30 @@ export function PomodoroHistory({ sessions }: Props) {
     .filter((s) => s.mode === "break")
     .reduce((sum, s) => sum + sessionMinutes(s), 0);
 
-  const lastSeven = new Date();
-  lastSeven.setDate(lastSeven.getDate() - 6);
-  lastSeven.setHours(0, 0, 0, 0);
+  const weekStart = new Date();
+  weekStart.setHours(0, 0, 0, 0);
+  weekStart.setDate(weekStart.getDate() - ((weekStart.getDay() + 6) % 7));
   const weekMinutes = completed
-    .filter((s) => new Date(s.started_at) >= lastSeven && (s.mode ?? "focus") === "focus")
+    .filter((s) => new Date(s.started_at) >= weekStart && (s.mode ?? "focus") === "focus")
     .reduce((sum, s) => sum + sessionMinutes(s), 0);
 
-  const heatWeeks = currentMonthWeeks(completed);
-  const monthDays = heatWeeks.flat().filter((day) => day.inMonth);
-  const monthLabel = new Date().toLocaleDateString("en-US", {
-    month: "long",
-    year: "numeric",
+  const monthFocusValues = completed
+    .filter((s) => (s.mode ?? "focus") === "focus")
+    .map((s) => ({ date: localDayKey(s.started_at), value: sessionMinutes(s) }));
+  const monthFocusByDate = new Map<string, number>();
+  monthFocusValues.forEach(({ date, value }) => {
+    monthFocusByDate.set(date, (monthFocusByDate.get(date) ?? 0) + value);
   });
   let streak = 0;
   let skippedOpenToday = false;
-  for (let i = monthDays.length - 1; i >= 0; i--) {
-    if (monthDays[i].date > new Date()) continue;
-    if (monthDays[i].minutes > 0) streak += 1;
-    else if (monthDays[i].key === today && !skippedOpenToday) skippedOpenToday = true;
+  const cursor = new Date();
+  cursor.setHours(0, 0, 0, 0);
+  const firstOfMonth = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
+  for (let d = new Date(cursor); d >= firstOfMonth; d.setDate(d.getDate() - 1)) {
+    const key = dayKey(d);
+    const minutes = monthFocusByDate.get(key) ?? 0;
+    if (minutes > 0) streak += 1;
+    else if (key === today && !skippedOpenToday) skippedOpenToday = true;
     else break;
   }
 
@@ -176,7 +126,7 @@ export function PomodoroHistory({ sessions }: Props) {
   const stats = [
     ["Focused today", formatDuration(focusToday, durationUnit), `${focusSessionsToday.length} focus sessions`],
     ["Breaks", formatDuration(breakToday, durationUnit), "recovery"],
-    ["Last 7 days", formatDuration(weekMinutes, durationUnit), "total focus"],
+    ["This week", formatDuration(weekMinutes, durationUnit), "since Monday"],
     ["Streak", `${streak}d`, "current month"],
   ];
 
@@ -209,57 +159,12 @@ export function PomodoroHistory({ sessions }: Props) {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
-        <div className={`${styles.panel} p-5`}>
-          <div className="mb-4 flex items-end justify-between">
-            <div>
-              <p className={styles.eyebrow}>Activity heatmap</p>
-              <h2 className="mt-1 text-xl font-semibold">Focus rhythm</h2>
-              <p className="mt-1 font-mono text-xs text-[#B8B6B0]">{monthLabel}</p>
-            </div>
-            <p className="font-mono text-[11px] text-[#B8B6B0]">
-              {monthDays.filter((d) => d.minutes > 0).length} active days
-            </p>
-          </div>
-
-          <div className={styles.heatmapBoard}>
-            <div className={styles.heatWeekHeader}>
-              <span />
-              {WEEKDAYS.map((day) => (
-                <span key={day}>{day}</span>
-              ))}
-              <span />
-            </div>
-            <div className={styles.heatWeekStack}>
-              {heatWeeks.map((week) => (
-                <div key={week[0].key} className={styles.heatWeekRow}>
-                  <span className={styles.heatDateLabel}>{shortDate(week[0].date)}</span>
-                  {week.map((day) => (
-                    <div
-                      key={day.key}
-                      title={`${day.date.toLocaleDateString("en-US", {
-                        weekday: "short",
-                        month: "short",
-                        day: "numeric",
-                      })}: ${day.minutes} focused min`}
-                      className={`${styles.heatCell} ${heatLevel(day.minutes)} ${
-                        day.key === today ? styles.todayCell : ""
-                      } ${day.inMonth ? "" : styles.outsideMonthCell}`}
-                    />
-                  ))}
-                  <span className={styles.heatDateLabel}>{shortDate(week[6].date)}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className={`${styles.heatLegend} mt-5 flex items-center gap-2 text-xs text-[#B8B6B0]`}>
-            <span>less</span>
-            {[0, 20, 45, 90, 150].map((mins) => (
-              <span key={mins} className={`${styles.heatCell} ${heatLevel(mins)}`} />
-            ))}
-            <span>more</span>
-          </div>
-        </div>
+        <MonthlyActivityHeatmap
+          title="Focus rhythm"
+          values={monthFocusValues}
+          valueLabel="focused minute"
+          thresholds={[30, 60, 120, 180]}
+        />
 
         <div className={`${styles.panel} p-5`}>
           <div className="mb-4 flex items-center justify-between">

@@ -12,8 +12,6 @@ import type {
   HabitLog,
   InboxItem,
   JournalEntry,
-  PomodoroSession,
-  Reflection,
   Subscription,
   TodoGoal,
   TodoStreak,
@@ -49,6 +47,8 @@ export default async function DashboardPage() {
 
   const since120 = new Date();
   since120.setDate(since120.getDate() - 120);
+  const monthStart = new Date();
+  monthStart.setDate(1);
 
   const todoActiveDate = activeDateKey();
   const todoTomorrowDate = tomorrowDateKey();
@@ -57,13 +57,12 @@ export default async function DashboardPage() {
     tasksRes,
     subsRes,
     inboxRes,
-    sessionsRes,
-    reflectionsRes,
     habitsRes,
     habitLogsRes,
     journalRes,
     todayTodoRes,
     tomorrowTodoRes,
+    monthTodoRes,
     todoStreakRes,
   ] = await Promise.all([
     supabase.from("daily_tasks").select("*").order("sort", { ascending: true }),
@@ -74,14 +73,6 @@ export default async function DashboardPage() {
       .eq("archived", false)
       .order("created_at", { ascending: false })
       .limit(20),
-    supabase
-      .from("pomodoro_sessions")
-      .select("*")
-      .gte("started_at", since120.toISOString()),
-    supabase
-      .from("reflections")
-      .select("*")
-      .gte("date", since120.toISOString().slice(0, 10)),
     supabase
       .from("habits")
       .select("*")
@@ -106,19 +97,22 @@ export default async function DashboardPage() {
       .select("*")
       .eq("date", todoTomorrowDate)
       .order("sort_order", { ascending: true }),
+    supabase
+      .from("todo_goals")
+      .select("*")
+      .gte("date", monthStart.toISOString().slice(0, 10)),
     supabase.from("todo_streak").select("*").eq("user_id", user?.id).maybeSingle(),
   ]);
 
   const tasks = (tasksRes.data ?? []) as DailyTask[];
   const subscriptions = (subsRes.data ?? []) as Subscription[];
   const inboxItems = (inboxRes.data ?? []) as InboxItem[];
-  const sessions = (sessionsRes.data ?? []) as PomodoroSession[];
-  const reflections = (reflectionsRes.data ?? []) as Reflection[];
   const habits = (habitsRes.data ?? []) as Habit[];
   const habitLogs = (habitLogsRes.data ?? []) as HabitLog[];
   const todayJournalEntries = (journalRes.data ?? []) as JournalEntry[];
   const todoToday = (todayTodoRes.data ?? []) as TodoGoal[];
   const todoTomorrow = (tomorrowTodoRes.data ?? []) as TodoGoal[];
+  const todoMonth = (monthTodoRes.data ?? []) as TodoGoal[];
   const todoStreakRow = (todoStreakRes.data ?? null) as TodoStreak | null;
   const todoStreakCount = todoStreakRow?.count ?? 0;
 
@@ -134,9 +128,8 @@ export default async function DashboardPage() {
         todoStreakCount={todoStreakCount}
         rightContent={
           <HabitHeatmap
-            sessions={sessions}
-            reflections={reflections}
             habitLogs={habitLogs}
+            todoGoals={todoMonth}
           />
         }
       />

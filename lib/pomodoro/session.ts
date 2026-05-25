@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/client";
 
 export const ACTIVE_POMODORO_KEY = "active-pomodoro-session";
 export const POMODORO_EVENT = "pomodoro-session-change";
+export const POMODORO_MUTED_KEY = "pomodoro-alarm-muted";
 
 export type ActivePomodoroSession = {
   id: string;
@@ -94,8 +95,19 @@ export async function unlockPomodoroAudio() {
   osc.stop(ctx.currentTime + 0.02);
 }
 
+export function isPomodoroAlarmMuted() {
+  if (typeof window === "undefined") return false;
+  return localStorage.getItem(POMODORO_MUTED_KEY) === "true";
+}
+
+export function setPomodoroAlarmMuted(muted: boolean) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(POMODORO_MUTED_KEY, muted ? "true" : "false");
+}
+
 export function ringPomodoroBell() {
   if (typeof window === "undefined") return;
+  if (isPomodoroAlarmMuted()) return;
   const Ctx = window.AudioContext || (window as any).webkitAudioContext;
   if (!Ctx) return;
   const win = window as typeof window & { __pomodoroAudioContext?: AudioContext };

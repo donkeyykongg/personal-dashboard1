@@ -14,6 +14,7 @@ import {
   KanbanSquare,
   Moon,
   Search,
+  Shield,
   Timer,
   LogOut,
   X,
@@ -48,6 +49,7 @@ const moreLinks: MoreLink[] = [
   { href: "/schedule", label: "Schedule", icon: CalendarClock, keywords: "calendar events outlook" },
   { href: "/kanban", label: "Kanban", icon: KanbanSquare, keywords: "board tasks columns" },
   { href: "/pomodoro", label: "Focus timer", icon: Timer, keywords: "pomodoro focus session" },
+  { href: "/admin", label: "Admin", icon: Shield, keywords: "users sign up accounts access" },
 ];
 
 export function MoreSheet({ open, onOpenChange }: Props) {

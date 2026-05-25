@@ -1,0 +1,129 @@
+.panel {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 12px 40px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(24px) saturate(1.2);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+}
+
+.panel::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 14px;
+  right: 14px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.16), transparent);
+  pointer-events: none;
+}
+
+.eyebrow {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #76746e;
+}
+
+.heatmapBoard {
+  width: 100%;
+  max-width: 430px;
+}
+
+.heatWeekHeader,
+.heatWeekRow {
+  display: grid;
+  grid-template-columns: 54px repeat(5, 36px) 54px;
+  align-items: center;
+  gap: 7px;
+}
+
+.heatWeekHeader {
+  margin-bottom: 10px;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-align: center;
+  text-transform: uppercase;
+  color: #b8b6b0;
+}
+
+.heatWeekStack {
+  display: grid;
+  gap: 7px;
+}
+
+.heatDateLabel {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #b8b6b0;
+  white-space: nowrap;
+}
+
+.heatWeekRow .heatDateLabel:last-child {
+  text-align: right;
+}
+
+.heatCell,
+.heatBlank {
+  height: 36px;
+  width: 36px;
+  min-width: 36px;
+  border-radius: 7px;
+}
+
+.heatCell {
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.heatBlank {
+  background: transparent;
+}
+
+.heatLegend .heatCell {
+  height: 22px;
+  width: 22px;
+  min-width: 22px;
+  border-radius: 6px;
+}
+
+.todayCell {
+  outline: 2px solid #fafafa;
+  outline-offset: 2px;
+  box-shadow:
+    0 0 0 1px rgba(107, 227, 164, 0.7),
+    0 0 12px rgba(107, 227, 164, 0.48);
+}
+
+.level0 { background: rgba(255, 255, 255, 0.055); }
+.level1 { background: rgba(107, 227, 164, 0.20); }
+.level2 { background: rgba(107, 227, 164, 0.38); }
+.level3 { background: rgba(107, 227, 164, 0.62); }
+.level4 {
+  background: var(--rowan-accent, #6be3a4);
+  box-shadow: 0 0 10px rgba(107, 227, 164, 0.34);
+}
+
+@media (max-width: 640px) {
+  .heatWeekHeader,
+  .heatWeekRow {
+    grid-template-columns: 44px repeat(5, 28px) 44px;
+    gap: 6px;
+  }
+
+  .heatCell,
+  .heatBlank {
+    height: 28px;
+    width: 28px;
+    min-width: 28px;
+  }
+}
