@@ -12,6 +12,7 @@ import {
   LayoutDashboard,
   Repeat,
   Search,
+  Target,
   Timer,
   Wallet,
   Inbox as InboxIcon,
@@ -33,6 +34,7 @@ type Bundle = {
 
 const NAV = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/goals", label: "Goals", icon: Target },
   { href: "/assistant", label: "Assistant", icon: Bot },
   { href: "/finances", label: "Finances", icon: Wallet },
   { href: "/brain", label: "Brain", icon: Brain },

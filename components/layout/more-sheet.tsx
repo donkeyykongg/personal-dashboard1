@@ -15,6 +15,7 @@ import {
   Moon,
   Search,
   Shield,
+  Target,
   Timer,
   LogOut,
   X,
@@ -42,6 +43,7 @@ type MoreLink = {
 
 const moreLinks: MoreLink[] = [
   { href: "/dashboard", label: "Home", icon: Home, keywords: "dashboard hub today" },
+  { href: "/goals", label: "Goals", icon: Target, keywords: "radar snapshot wealth mandarin food fitness career projects" },
   { href: "/assistant", label: "Assistant", icon: Bot, keywords: "ai chat executive assistant todo schedule capture advice" },
   { href: "/finances", label: "Finances", icon: Wallet, keywords: "money net worth subscriptions cash flow biz" },
   { href: "/brain", label: "Brain", icon: Brain, keywords: "notes pages knowledge entities" },
